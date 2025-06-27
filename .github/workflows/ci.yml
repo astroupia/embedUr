@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, nain]
+  pull_request:
+    branches: [main, nain]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npx prettier --check "**/*.{ts,tsx,md}"
+
+      - name: Build
+        run: npm run build
+
+  
