@@ -10,9 +10,27 @@ const registerSchema = z.object({
   industry: z.string().optional(),
 });
 
+// Define interfaces for type safety
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  password: string;
+  role: string;
+  company_id: string;
+  created_at: string;
+}
+
+interface Company {
+  id: string;
+  name: string;
+  industry: string | null;
+  created_at: string;
+}
+
 // In-memory storage for demo purposes - replace with your database
-const users: any[] = [];
-const companies: any[] = [];
+const users: User[] = [];
+const companies: Company[] = [];
 
 export async function POST(request: Request) {
   try {
@@ -55,7 +73,7 @@ export async function POST(request: Request) {
     users.push(newUser);
 
     // Return success response (without sensitive data)
-    const { password: _, ...userWithoutPassword } = newUser;
+    const { password: _unusedPassword, ...userWithoutPassword } = newUser;
     
     return NextResponse.json({
       message: 'Registration successful',

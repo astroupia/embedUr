@@ -67,11 +67,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    console.log("Continue with Google clicked");
-    // TODO: Implement Google sign in
-  };
-
   const handleCreateAccount = () => {
     router.push('/register');
   };
@@ -87,7 +82,6 @@ export default function LoginPage() {
         heroImageSrc="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80"
         testimonials={sampleTestimonials}
         onSignIn={handleSignIn}
-        onGoogleSignIn={handleGoogleSignIn}
         onResetPassword={handleResetPassword}
         onCreateAccount={handleCreateAccount}
       />

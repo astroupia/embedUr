@@ -10,7 +10,7 @@ const sampleTestimonials: Testimonial[] = [
     name: "Sarah Chen",
     handle: "@sarahdigital",
     text: "Amazing platform! The user experience is seamless and the features are exactly what I needed."
-  },
+  },      
   {
     avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
     name: "Marcus Johnson",
@@ -94,7 +94,7 @@ export default function RegisterPage() {
         mode={mode}
         onModeChange={setMode}
         onSignUp={handleSignUp}
-        onGoogleSignUp={handleGoogleSignUp}
+     
         onSignIn={handleSignIn}
       />
       {error && (

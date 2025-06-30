@@ -19,8 +19,19 @@ const joinSchema = z.object({
   invite_code: z.string().min(1, 'Invite code is required'),
 });
 
+// Define interfaces for type safety
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  password: string;
+  role: string;
+  company_id: string;
+  created_at: string;
+}
+
 // In-memory storage for demo purposes - replace with your database
-const users: any[] = [];
+const users: User[] = [];
 
 export async function POST(request: Request) {
   try {
@@ -80,7 +91,7 @@ export async function POST(request: Request) {
     // await markInviteAsUsed(invite_code, userId);
 
     // Return success response (without sensitive data)
-    const { password: _, ...userWithoutPassword } = newUser;
+    const { password: _unusedPassword, ...userWithoutPassword } = newUser;
     
     return NextResponse.json({
       message: 'Registration successful',

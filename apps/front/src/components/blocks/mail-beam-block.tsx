@@ -2,7 +2,7 @@
 
 import { AnimatedBeamMultipleOutputDemo } from "@/components/ui/mail-beam";
 import { Button } from "@/components/ui/button";
-import { Mail, Send, Check, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export function MailBeamBlock() {
   return (
