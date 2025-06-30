@@ -1,0 +1,446 @@
+// Prisma Schema with Enhancements for Multi-Tenant Cold Outreach Platform
+
+// Generator Configuration
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "multiSchema"]
+  output          = "../generated/prisma"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  schemas           = ["public"]
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// ------------------ Enums ------------------
+
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_DELETION
+
+  @@schema("public")
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+  READ_ONLY
+
+  @@schema("public")
+}
+
+enum SystemNotificationLevel {
+  INFO
+  WARNING
+  ERROR
+  SUCCESS
+
+  @@schema("public")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  NOT_INTERESTED
+  BOOKED
+  DO_NOT_CONTACT
+
+  @@schema("public")
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+
+  @@schema("public")
+}
+
+enum EmailStatus {
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+
+  @@schema("public")
+}
+
+enum ReplyClassification {
+  INTERESTED
+  NOT_INTERESTED
+  AUTO_REPLY
+  UNSUBSCRIBE
+  QUESTION
+
+  @@schema("public")
+}
+
+enum BookingStatus {
+  BOOKED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+
+  @@schema("public")
+}
+
+enum WorkflowType {
+  LEAD_ENRICHMENT
+  EMAIL_SEQUENCE
+  LEAD_ROUTING
+
+  @@schema("public")
+}
+
+enum AIInteractionType {
+  DRAFT_EMAIL
+  REPLY_ANALYSIS
+
+  @@schema("public")
+}
+
+enum EnrichmentProvider {
+  APOLLO
+  DROP_CONTACT
+  CLEARBIT
+
+  @@schema("public")
+}
+
+enum WebhookSource {
+  SMARTLEAD
+  CALENDLY
+  N8N
+
+  @@schema("public")
+}
+
+// ------------------ Public Schema Models ------------------
+
+model Company {
+  id         String        @id @default(cuid())
+  name       String        @unique
+  schemaName String        @unique
+  status     CompanyStatus @default(ACTIVE)
+  planId     String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  plan          Plan?                @relation(fields: [planId], references: [id])
+  users         User[]
+  apiKeys       APIKey[]
+  notifications SystemNotification[]
+
+  @@schema("public")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(MEMBER)
+  companyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company   Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  auditLogs AuditTrail[]
+
+  @@index([companyId])
+  @@schema("public")
+}
+
+model Plan {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  maxLeads     Int      @default(1000)
+  maxWorkflows Int      @default(100)
+  priceCents   Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  companies Company[]
+
+  @@schema("public")
+}
+
+model APIKey {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String?
+  scope     String
+  active    Boolean  @default(true)
+  companyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@schema("public")
+}
+
+model GlobalSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@schema("public")
+}
+
+model SystemNotification {
+  id        String                  @id @default(cuid())
+  message   String
+  level     SystemNotificationLevel
+  read      Boolean                 @default(false)
+  companyId String
+  createdAt DateTime                @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@schema("public")
+}
+
+// ------------------ Per-Company Schema Models ------------------
+
+model Lead {
+  id             String     @id @default(cuid())
+  fullName       String
+  email          String
+  linkedinUrl    String?
+  enrichmentData Json?
+  verified       Boolean    @default(false)
+  status         LeadStatus @default(NEW)
+  companyId      String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  emailLogs          EmailLog[]
+  replies            Reply[]
+  bookings           Booking[]
+  enrichmentRequests EnrichmentRequest[]
+  workflowExecutions WorkflowExecution[]
+
+  @@unique([email, companyId])
+  @@index([status])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  status      CampaignStatus @default(DRAFT)
+  aiPersonaId String?
+  workflowId  String?
+  companyId   String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now())
+
+  aiPersona AIPersona? @relation(fields: [aiPersonaId], references: [id], onDelete: SetNull)
+  workflow  Workflow?  @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+  emailLogs EmailLog[]
+
+  @@index([aiPersonaId])
+  @@index([workflowId])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model AIPersona {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  prompt      String
+  parameters  Json?
+  companyId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  campaigns Campaign[]
+
+  @@index([companyId])
+  @@schema("public")
+}
+
+model EmailLog {
+  id         String      @id @default(cuid())
+  status     EmailStatus @default(SENT)
+  sentAt     DateTime    @default(now())
+  metadata   Json?
+  leadId     String
+  campaignId String
+  companyId  String
+
+  lead     Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  replies  Reply[]
+
+  @@index([leadId])
+  @@index([campaignId])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model Reply {
+  id             String              @id @default(cuid())
+  content        String
+  classification ReplyClassification
+  handledBy      String?
+  leadId         String
+  emailLogId     String              @unique
+  companyId      String
+  createdAt      DateTime            @default(now())
+
+  lead     Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  emailLog EmailLog @relation(fields: [emailLogId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  calendlyLink  String
+  scheduledTime DateTime
+  status        BookingStatus @default(BOOKED)
+  leadId        String
+  companyId     String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model Workflow {
+  id            String       @id @default(cuid())
+  name          String
+  type          WorkflowType
+  n8nWorkflowId String
+  companyId     String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now())
+
+  executions WorkflowExecution[]
+  campaigns  Campaign[]
+
+  @@index([companyId])
+  @@schema("public")
+}
+
+model WorkflowExecution {
+  id          String    @id @default(cuid())
+  status      String
+  triggeredBy String
+  startTime   DateTime  @default(now())
+  endTime     DateTime?
+  inputData   Json?
+  outputData  Json?
+  durationMs  Int?
+  leadId      String?
+  workflowId  String
+  companyId   String
+
+  lead           Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  workflow       Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  aiInteractions AIInteraction[]
+
+  @@index([leadId])
+  @@index([workflowId])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model AIInteraction {
+  id                  String            @id @default(cuid())
+  type                AIInteractionType
+  inputData           Json
+  outputData          Json
+  workflowExecutionId String?
+  companyId           String
+  createdAt           DateTime          @default(now())
+
+  workflowExecution WorkflowExecution? @relation(fields: [workflowExecutionId], references: [id], onDelete: SetNull)
+
+  @@index([workflowExecutionId])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model EnrichmentRequest {
+  id           String             @id @default(cuid())
+  provider     EnrichmentProvider
+  requestData  Json
+  responseData Json?
+  leadId       String
+  companyId    String
+  createdAt    DateTime           @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model UsageMetric {
+  id         String   @id @default(cuid())
+  metricName String
+  count      Int
+  period     String
+  companyId  String
+  recordedAt DateTime @default(now())
+
+  @@index([metricName])
+  @@index([companyId])
+  @@schema("public")
+}
+
+model WebhookEvent {
+  id         String        @id @default(cuid())
+  source     WebhookSource
+  payload    Json
+  companyId  String
+  receivedAt DateTime      @default(now())
+
+  @@index([companyId])
+  @@schema("public")
+}
+
+model AuditTrail {
+  id            String   @id @default(cuid())
+  entity        String
+  entityId      String
+  action        String
+  performedById String?
+  changes       Json?
+  companyId     String
+  timestamp     DateTime @default(now())
+
+  performedBy User? @relation(fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([entityId])
+  @@index([performedById])
+  @@index([companyId])
+  @@schema("public")
+}
