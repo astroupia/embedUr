@@ -40,8 +40,8 @@ export function HeroSection() {
                                         asChild
                                         size="lg"
                                         className="h-12 rounded-full pl-5 pr-3 text-base">
-                                        <Link href="#link">
-                                            <span className="text-nowrap">Start Free Trial</span>
+                                        <Link href="/dashboard">
+                                            <span className="text-nowrap">View Dashboard</span>
                                             <ChevronRight className="ml-1" />
                                         </Link>
                                     </Button>
