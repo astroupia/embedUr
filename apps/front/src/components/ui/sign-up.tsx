@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Building2, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Building2, Mail, Lock, Users } from 'lucide-react';
 import Image from 'next/image';
 
 export interface Testimonial {
@@ -17,8 +17,8 @@ interface SignUpPageProps {
   onSignUp?: (event: React.FormEvent<HTMLFormElement>) => void;
   onResetPassword?: () => void;
   onSignIn?: () => void;
-  mode?: 'new-company' | 'join-company';
-  onModeChange?: (mode: 'new-company' | 'join-company') => void;
+  mode?: 'new-company' | 'create-user';
+  onModeChange?: (mode: 'new-company' | 'create-user') => void;
 }
 
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -70,10 +70,10 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onModeChange?.('join-company')}
-                  className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-colors ${mode === 'join-company' ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                  onClick={() => onModeChange?.('create-user')}
+                  className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-colors ${mode === 'create-user' ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
                 >
-                  Join Existing Company
+                  Create User
                 </button>
               </div>
             </div>
@@ -154,7 +154,35 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                           <option value="healthcare">Healthcare</option>
                           <option value="education">Education</option>
                           <option value="retail">Retail</option>
+                          <option value="manufacturing">Manufacturing</option>
+                          <option value="consulting">Consulting</option>
+                          <option value="marketing">Marketing</option>
                           <option value="other">Other</option>
+                        </select>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground ml-2">
+                          <path d="m6 9 6 6 6-6" />
+                        </svg>
+                      </div>
+                    </GlassInputWrapper>
+                  </div>
+
+                  <div className="animate-element animate-delay-800">
+                    <label className="text-sm font-medium text-muted-foreground">Number of Employees</label>
+                    <GlassInputWrapper>
+                      <div className="flex items-center px-4">
+                        <Users className="h-4 w-4 text-muted-foreground mr-2" />
+                        <select 
+                          name="employees" 
+                          className="w-full bg-transparent text-sm py-4 focus:outline-none appearance-none"
+                          required
+                        >
+                          <option value="">Select company size</option>
+                          <option value="1-10">1-10 employees</option>
+                          <option value="11-50">11-50 employees</option>
+                          <option value="51-200">51-200 employees</option>
+                          <option value="201-500">201-500 employees</option>
+                          <option value="501-1000">501-1000 employees</option>
+                          <option value="1000+">1000+ employees</option>
                         </select>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground ml-2">
                           <path d="m6 9 6 6 6-6" />
@@ -191,14 +219,14 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
               <div className="pt-2">
                 <button 
                   type="submit" 
-                  className="animate-element animate-delay-800 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="animate-element animate-delay-900 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
-                  Create Account
+                  {mode === 'new-company' ? 'Create Company & Account' : 'Create Account'}
                 </button>
               </div>
             </form>
 
-<p className="animate-element animate-delay-1100 text-center text-sm text-muted-foreground">
+            <p className="animate-element animate-delay-1100 text-center text-sm text-muted-foreground">
               Already have an account?{' '}
               <a 
                 href="#" 
