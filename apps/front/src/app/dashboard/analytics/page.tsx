@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -18,6 +19,21 @@ import {
   AreaChart,
   Area
 } from "recharts";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { 
   TrendingUp, 
@@ -65,7 +81,42 @@ const engagementByTimeData = [
   { time: "9 PM", opens: 900, clicks: 135 },
 ];
 
+const performanceChartConfig = {
+  sent: {
+    label: "Sent",
+    color: "var(--chart-1)",
+  },
+  opened: {
+    label: "Opened",
+    color: "var(--chart-2)",
+  },
+  clicked: {
+    label: "Clicked",
+    color: "var(--chart-3)",
+  },
+} satisfies ChartConfig;
+
+const subscriberChartConfig = {
+  new: {
+    label: "New Subscribers",
+    color: "var(--chart-1)",
+  },
+} satisfies ChartConfig;
+
+const engagementChartConfig = {
+  opens: {
+    label: "Opens",
+    color: "var(--chart-1)",
+  },
+  clicks: {
+    label: "Clicks",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
+
 export default function AnalyticsPage() {
+  const [timeRange, setTimeRange] = React.useState("7m");
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -158,114 +209,196 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Performance Chart */}
-      <Card className="border-0 bg-white dark:bg-zinc-900 shadow-sm">
-        <CardHeader>
-          <CardTitle>Performance Over Time</CardTitle>
+      <Card className="pt-0">
+        <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+          <div className="grid flex-1 gap-1">
+            <CardTitle>Performance Over Time</CardTitle>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Email campaign performance metrics over the last 7 months
+            </p>
+          </div>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger
+              className="hidden w-[160px] rounded-lg sm:ml-auto sm:flex"
+              aria-label="Select a time range"
+            >
+              <SelectValue placeholder="Last 7 months" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="7m" className="rounded-lg">
+                Last 7 months
+              </SelectItem>
+              <SelectItem value="3m" className="rounded-lg">
+                Last 3 months
+              </SelectItem>
+              <SelectItem value="1m" className="rounded-lg">
+                Last month
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
+        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+          <ChartContainer
+            config={performanceChartConfig}
+            className="aspect-auto h-[250px] w-full"
+          >
             <AreaChart data={performanceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
+              <defs>
+                <linearGradient id="fillSent" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-sent)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-sent)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+                <linearGradient id="fillOpened" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-opened)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-opened)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+                <linearGradient id="fillClicked" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-clicked)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-clicked)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
               />
-              <Area 
-                type="monotone" 
-                dataKey="sent" 
-                stackId="1" 
-                stroke="#3b82f6" 
-                fill="#3b82f6" 
-                fillOpacity={0.3}
-                name="Sent"
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dot" />}
               />
-              <Area 
-                type="monotone" 
-                dataKey="opened" 
-                stackId="1" 
-                stroke="#10b981" 
-                fill="#10b981" 
-                fillOpacity={0.3}
-                name="Opened"
+              <Area
+                dataKey="clicked"
+                type="natural"
+                fill="url(#fillClicked)"
+                stroke="var(--color-clicked)"
+                stackId="a"
               />
-              <Area 
-                type="monotone" 
-                dataKey="clicked" 
-                stackId="1" 
-                stroke="#f59e0b" 
-                fill="#f59e0b" 
-                fillOpacity={0.3}
-                name="Clicked"
+              <Area
+                dataKey="opened"
+                type="natural"
+                fill="url(#fillOpened)"
+                stroke="var(--color-opened)"
+                stackId="a"
               />
+              <Area
+                dataKey="sent"
+                type="natural"
+                fill="url(#fillSent)"
+                stroke="var(--color-sent)"
+                stackId="a"
+              />
+              <ChartLegend />
             </AreaChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Subscriber Growth */}
-        <Card className="border-0 bg-white dark:bg-zinc-900 shadow-sm">
-          <CardHeader>
-            <CardTitle>Subscriber Growth</CardTitle>
+        <Card className="pt-0">
+          <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+            <div className="grid flex-1 gap-1">
+              <CardTitle>Subscriber Growth</CardTitle>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                New subscriber acquisition over time
+              </p>
+            </div>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+            <ChartContainer
+              config={subscriberChartConfig}
+              className="aspect-auto h-[250px] w-full"
+            >
               <BarChart data={subscriberGrowthData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  minTickGap={32}
                 />
-                <Bar dataKey="new" fill="#3b82f6" name="New Subscribers" radius={[4, 4, 0, 0]} />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="dot" />}
+                />
+                <Bar 
+                  dataKey="new" 
+                  fill="var(--color-new)" 
+                  radius={[4, 4, 0, 0]} 
+                />
+                <ChartLegend />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
 
         {/* Email Types Distribution */}
-        <Card className="border-0 bg-white dark:bg-zinc-900 shadow-sm">
-          <CardHeader>
-            <CardTitle>Email Types Distribution</CardTitle>
+        <Card className="pt-0">
+          <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+            <div className="grid flex-1 gap-1">
+              <CardTitle>Email Types Distribution</CardTitle>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Breakdown of email campaign types
+              </p>
+            </div>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={emailTypesData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {emailTypesData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+            <div className="flex items-center justify-center h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={emailTypesData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {emailTypesData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
             <div className="mt-4 space-y-2">
               {emailTypesData.map((item) => (
                 <div key={item.name} className="flex items-center justify-between text-sm">
@@ -285,28 +418,46 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Engagement by Time */}
-      <Card className="border-0 bg-white dark:bg-zinc-900 shadow-sm">
-        <CardHeader>
-          <CardTitle>Engagement by Time of Day</CardTitle>
+      <Card className="pt-0">
+        <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+          <div className="grid flex-1 gap-1">
+            <CardTitle>Engagement by Time of Day</CardTitle>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Email engagement patterns throughout the day
+            </p>
+          </div>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+          <ChartContainer
+            config={engagementChartConfig}
+            className="aspect-auto h-[250px] w-full"
+          >
             <BarChart data={engagementByTimeData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="time" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="time"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
               />
-              <Bar dataKey="opens" fill="#3b82f6" name="Opens" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="clicks" fill="#10b981" name="Clicks" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dot" />}
+              />
+              <Bar 
+                dataKey="clicks" 
+                fill="var(--color-clicks)" 
+                radius={[4, 4, 0, 0]} 
+              />
+              <Bar 
+                dataKey="opens" 
+                fill="var(--color-opens)" 
+                radius={[4, 4, 0, 0]} 
+                              />
+                <ChartLegend />
+              </BarChart>
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>
