@@ -1,88 +1,173 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Line, LineChart, Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import * as React from "react";
+import { Line, LineChart, Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const data = [
-  { month: "Jan", sent: 12000, opened: 3000, clicked: 400 },
-  { month: "Feb", sent: 15000, opened: 3750, clicked: 525 },
-  { month: "Mar", sent: 18000, opened: 4320, clicked: 648 },
-  { month: "Apr", sent: 22000, opened: 5280, clicked: 792 },
-  { month: "May", sent: 25000, opened: 6000, clicked: 900 },
-  { month: "Jun", sent: 28000, opened: 6720, clicked: 1008 },
-  { month: "Jul", sent: 32000, opened: 7680, clicked: 1152 },
+const monthlyData = [
+  { month: "Jan", sent: 15420, opened: 4626, clicked: 693, replied: 138 },
+  { month: "Feb", sent: 18250, opened: 5475, clicked: 821, replied: 164 },
+  { month: "Mar", sent: 21300, opened: 6390, clicked: 958, replied: 191 },
+  { month: "Apr", sent: 24180, opened: 7254, clicked: 1088, replied: 217 },
+  { month: "May", sent: 26890, opened: 8067, clicked: 1210, replied: 242 },
+  { month: "Jun", sent: 29560, opened: 8868, clicked: 1330, replied: 266 },
+  { month: "Jul", sent: 32420, opened: 9726, clicked: 1459, replied: 291 },
 ];
 
 const weeklyData = [
-  { day: "Mon", opens: 1200, clicks: 180 },
-  { day: "Tue", opens: 2100, clicks: 315 },
-  { day: "Wed", opens: 1800, clicks: 270 },
-  { day: "Thu", opens: 2400, clicks: 360 },
-  { day: "Fri", opens: 1900, clicks: 285 },
-  { day: "Sat", opens: 900, clicks: 135 },
-  { day: "Sun", opens: 800, clicks: 120 },
+  { day: "Mon", opens: 2840, clicks: 426, replies: 85 },
+  { day: "Tue", opens: 3120, clicks: 468, replies: 93 },
+  { day: "Wed", opens: 2980, clicks: 447, replies: 89 },
+  { day: "Thu", opens: 3250, clicks: 487, replies: 97 },
+  { day: "Fri", opens: 2890, clicks: 433, replies: 86 },
+  { day: "Sat", opens: 1560, clicks: 234, replies: 46 },
+  { day: "Sun", opens: 1420, clicks: 213, replies: 42 },
 ];
 
+const monthlyChartConfig = {
+  sent: {
+    label: "Emails Sent",
+    color: "var(--chart-1)",
+  },
+  opened: {
+    label: "Opened",
+    color: "var(--chart-2)",
+  },
+  clicked: {
+    label: "Clicked",
+    color: "var(--chart-3)",
+  },
+  replied: {
+    label: "Replied",
+    color: "var(--chart-4)",
+  },
+} satisfies ChartConfig;
+
+const weeklyChartConfig = {
+  opens: {
+    label: "Opens",
+    color: "var(--chart-1)",
+  },
+  clicks: {
+    label: "Clicks",
+    color: "var(--chart-2)",
+  },
+  replies: {
+    label: "Replies",
+    color: "var(--chart-3)",
+  },
+} satisfies ChartConfig;
+
 export function EmailAnalytics() {
+  const [timeRange, setTimeRange] = React.useState("7m");
+
   return (
     <Card className="border-0 bg-white dark:bg-zinc-900 shadow-sm">
-      <CardHeader className="pb-4">
-        <CardTitle>Email Performance</CardTitle>
+      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+        <div className="grid flex-1 gap-1">
+          <CardTitle className="text-lg font-semibold text-zinc-900 dark:text-white">
+            Email Performance
+          </CardTitle>
+          <CardDescription className="text-sm text-zinc-600 dark:text-zinc-400">
+            Track your email campaign performance over time
+          </CardDescription>
+        </div>
+        <Select value={timeRange} onValueChange={setTimeRange}>
+          <SelectTrigger
+            className="hidden w-[160px] rounded-lg sm:ml-auto sm:flex"
+            aria-label="Select time range"
+          >
+            <SelectValue placeholder="Last 7 months" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            <SelectItem value="7m" className="rounded-lg">
+              Last 7 months
+            </SelectItem>
+            <SelectItem value="3m" className="rounded-lg">
+              Last 3 months
+            </SelectItem>
+            <SelectItem value="1m" className="rounded-lg">
+              Last month
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-2 pt-4 sm:px-6 sm:pt-6">
         {/* Monthly Performance */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Monthly Trends</h3>
           </div>
-          <div className="h-[250px] [&_.recharts-cartesian-axis-tick_text]:fill-foreground [&_.recharts-cartesian-grid_line]:stroke-border [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="month" 
-                  stroke="hsl(var(--foreground))" 
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <YAxis 
-                  stroke="hsl(var(--foreground))" 
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    color: 'hsl(var(--foreground))',
-                    fontSize: '12px'
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="sent"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="opened"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="clicked"
-                  stroke="#f59e0b"
-                  strokeWidth={3}
-                  dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <ChartContainer
+            config={monthlyChartConfig}
+            className="aspect-auto h-[250px] w-full [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border"
+          >
+            <LineChart data={monthlyData}>
+              <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                stroke="var(--muted-foreground)"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                stroke="var(--muted-foreground)"
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dot" />}
+              />
+              <Line
+                dataKey="sent"
+                type="monotone"
+                stroke="var(--color-sent)"
+                strokeWidth={2}
+                dot={{ fill: "var(--color-sent)", strokeWidth: 2, r: 4 }}
+              />
+              <Line
+                dataKey="opened"
+                type="monotone"
+                stroke="var(--color-opened)"
+                strokeWidth={2}
+                dot={{ fill: "var(--color-opened)", strokeWidth: 2, r: 4 }}
+              />
+              <Line
+                dataKey="clicked"
+                type="monotone"
+                stroke="var(--color-clicked)"
+                strokeWidth={2}
+                dot={{ fill: "var(--color-clicked)", strokeWidth: 2, r: 4 }}
+              />
+              <Line
+                dataKey="replied"
+                type="monotone"
+                stroke="var(--color-replied)"
+                strokeWidth={2}
+                dot={{ fill: "var(--color-replied)", strokeWidth: 2, r: 4 }}
+              />
+              <ChartLegend />
+            </LineChart>
+          </ChartContainer>
         </div>
 
         {/* Weekly Engagement */}
@@ -90,43 +175,48 @@ export function EmailAnalytics() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Weekly Engagement</h3>
           </div>
-          <div className="h-[150px] [&_.recharts-cartesian-axis-tick_text]:fill-foreground [&_.recharts-cartesian-grid_line]:stroke-border [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="day" 
-                  stroke="hsl(var(--foreground))" 
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <YAxis 
-                  stroke="hsl(var(--foreground))" 
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    color: 'hsl(var(--foreground))',
-                    fontSize: '12px'
-                  }}
-                />
-                <Bar
-                  dataKey="opens"
-                  fill="#3b82f6"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="clicks"
-                  fill="#10b981"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <ChartContainer
+            config={weeklyChartConfig}
+            className="aspect-auto h-[150px] w-full [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border"
+          >
+            <BarChart data={weeklyData}>
+              <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
+              <XAxis
+                dataKey="day"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                stroke="var(--muted-foreground)"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                stroke="var(--muted-foreground)"
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dot" />}
+              />
+              <Bar
+                dataKey="opens"
+                fill="var(--color-opens)"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="clicks"
+                fill="var(--color-clicks)"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="replies"
+                fill="var(--color-replies)"
+                radius={[4, 4, 0, 0]}
+              />
+              <ChartLegend />
+            </BarChart>
+          </ChartContainer>
         </div>
       </CardContent>
     </Card>

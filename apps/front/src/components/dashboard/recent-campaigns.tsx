@@ -22,39 +22,39 @@ import {
 const campaigns = [
   {
     id: 1,
-    name: "Summer Sale Announcement",
-    status: "sent",
+    name: "Q1 Sales Outreach",
+    status: "active",
     sentDate: "2024-01-15",
-    recipients: 12500,
-    openRate: 24.8,
-    clickRate: 3.2,
+    recipients: 2847,
+    openRate: 32.4,
+    clickRate: 8.2,
   },
   {
     id: 2,
-    name: "Weekly Newsletter #45",
+    name: "Product Launch Campaign",
     status: "draft",
     sentDate: "2024-01-14",
-    recipients: 18200,
-    openRate: 28.1,
-    clickRate: 4.1,
-  },
-  {
-    id: 3,
-    name: "Welcome Series - Day 1",
-    status: "scheduled",
-    sentDate: "2024-01-16",
-    recipients: 850,
+    recipients: 1850,
     openRate: 0,
     clickRate: 0,
   },
   {
+    id: 3,
+    name: "Follow-up Sequence",
+    status: "active",
+    sentDate: "2024-01-16",
+    recipients: 1250,
+    openRate: 28.7,
+    clickRate: 6.1,
+  },
+  {
     id: 4,
-    name: "Product Update Alert",
+    name: "Customer Success Stories",
     status: "sent",
     sentDate: "2024-01-13",
     recipients: 3200,
-    openRate: 31.2,
-    clickRate: 5.8,
+    openRate: 35.2,
+    clickRate: 9.8,
   }
 ];
 
@@ -62,10 +62,12 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case "sent":
       return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800";
+    case "active":
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800";
     case "draft":
       return "bg-zinc-100 text-zinc-800 dark:bg-zinc-900/20 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800";
     case "scheduled":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800";
+      return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800";
     default:
       return "bg-zinc-100 text-zinc-800 dark:bg-zinc-900/20 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800";
   }

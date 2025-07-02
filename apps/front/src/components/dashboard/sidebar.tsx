@@ -15,9 +15,14 @@ import {
 
 const navLinks = [
   {
-    label: "Overview",
+    label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    label: "Leads",
+    href: "/dashboard/leads",
+    icon: Users,
   },
   {
     label: "Campaigns",
@@ -28,16 +33,6 @@ const navLinks = [
     label: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
-  },
-  {
-    label: "Segments",
-    href: "/dashboard/segments",
-    icon: Users,
-  },
-  {
-    label: "Performance",
-    href: "/dashboard/performance",
-    icon: TrendingUp,
   },
   {
     label: "Templates",
