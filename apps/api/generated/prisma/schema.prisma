@@ -127,13 +127,26 @@ enum WebhookSource {
 // ------------------ Public Schema Models ------------------
 
 model Company {
-  id         String        @id @default(cuid())
-  name       String        @unique
-  schemaName String        @unique
-  status     CompanyStatus @default(ACTIVE)
-  planId     String?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  name              String        @unique
+  schemaName        String        @unique
+  status            CompanyStatus @default(ACTIVE)
+  planId            String?
+  industry          String
+  location          String?
+  website           String?
+  description       String?
+  logoUrl           String?
+  bannerUrl         String?
+  employees         Int
+  revenue           Int?
+  linkedinUsername  String?
+  twitterUsername   String?
+  facebookUsername  String?
+  instagramUsername String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   plan          Plan?                @relation(fields: [planId], references: [id])
   users         User[]
@@ -144,17 +157,27 @@ model Company {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  role      UserRole @default(MEMBER)
-  companyId String
+  id                String   @id @default(cuid())
+  email             String   @unique
+  firstName         String
+  lastName          String
+  password          String
+  role              UserRole @default(MEMBER)
+  companyId         String
+  linkedinUrl       String?
+  profileUrl        String?
+  twitterUsername   String?
+  facebookUsername  String?
+  instagramUsername String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  company   Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  auditLogs AuditTrail[]
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  auditLogs          AuditTrail[]
+  sessions           Session[]
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
 
   @@index([companyId])
   @@schema("public")
@@ -215,7 +238,7 @@ model SystemNotification {
   @@schema("public")
 }
 
-// ------------------ Per-Company Schema Models ------------------
+// ------------------ Per-Company Schema Models ----------------
 
 model Lead {
   id             String     @id @default(cuid())
@@ -226,12 +249,14 @@ model Lead {
   verified       Boolean    @default(false)
   status         LeadStatus @default(NEW)
   companyId      String
+  campaignId     String
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
   emailLogs          EmailLog[]
   replies            Reply[]
   bookings           Booking[]
+  campaign           Campaign            @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   enrichmentRequests EnrichmentRequest[]
   workflowExecutions WorkflowExecution[]
 
@@ -249,6 +274,7 @@ model Campaign {
   aiPersonaId String?
   workflowId  String?
   companyId   String
+  leads       Lead[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @default(now())
 
@@ -442,5 +468,49 @@ model AuditTrail {
   @@index([entityId])
   @@index([performedById])
   @@index([companyId])
+  @@schema("public")
+}
+
+// ------------------ Auth Models ------------------
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshToken String
+  ip           String
+  userAgent    String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@schema("public")
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@schema("public")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@schema("public")
 }
