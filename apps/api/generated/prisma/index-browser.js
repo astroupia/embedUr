@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.10.1
- * Query Engine version: 9b628578b3b7cae625e8c927178f15a170e74a9c
+ * Prisma Client JS version: 6.11.0
+ * Query Engine version: 9c30299f5a0ea26a96790e13f796dc6094db3173
  */
 Prisma.prismaVersion = {
-  client: "6.10.1",
-  engine: "9b628578b3b7cae625e8c927178f15a170e74a9c"
+  client: "6.11.0",
+  engine: "9c30299f5a0ea26a96790e13f796dc6094db3173"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -126,6 +126,18 @@ exports.Prisma.CompanyScalarFieldEnum = {
   schemaName: 'schemaName',
   status: 'status',
   planId: 'planId',
+  industry: 'industry',
+  location: 'location',
+  website: 'website',
+  description: 'description',
+  logoUrl: 'logoUrl',
+  bannerUrl: 'bannerUrl',
+  employees: 'employees',
+  revenue: 'revenue',
+  linkedinUsername: 'linkedinUsername',
+  twitterUsername: 'twitterUsername',
+  facebookUsername: 'facebookUsername',
+  instagramUsername: 'instagramUsername',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -133,10 +145,16 @@ exports.Prisma.CompanyScalarFieldEnum = {
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
-  name: 'name',
+  firstName: 'firstName',
+  lastName: 'lastName',
   password: 'password',
   role: 'role',
   companyId: 'companyId',
+  linkedinUrl: 'linkedinUrl',
+  profileUrl: 'profileUrl',
+  twitterUsername: 'twitterUsername',
+  facebookUsername: 'facebookUsername',
+  instagramUsername: 'instagramUsername',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -189,6 +207,7 @@ exports.Prisma.LeadScalarFieldEnum = {
   verified: 'verified',
   status: 'status',
   companyId: 'companyId',
+  campaignId: 'campaignId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -318,6 +337,33 @@ exports.Prisma.AuditTrailScalarFieldEnum = {
   changes: 'changes',
   companyId: 'companyId',
   timestamp: 'timestamp'
+};
+
+exports.Prisma.SessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  refreshToken: 'refreshToken',
+  ip: 'ip',
+  userAgent: 'userAgent',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EmailVerificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  token: 'token',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PasswordResetScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  token: 'token',
+  expiresAt: 'expiresAt',
+  used: 'used',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -452,7 +498,10 @@ exports.Prisma.ModelName = {
   EnrichmentRequest: 'EnrichmentRequest',
   UsageMetric: 'UsageMetric',
   WebhookEvent: 'WebhookEvent',
-  AuditTrail: 'AuditTrail'
+  AuditTrail: 'AuditTrail',
+  Session: 'Session',
+  EmailVerification: 'EmailVerification',
+  PasswordReset: 'PasswordReset'
 };
 
 /**

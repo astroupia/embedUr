@@ -175,6 +175,9 @@ updatedAt DateTime @updatedAt
 
 company   Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
 auditLogs AuditTrail[]
+sessions  Session[]
+emailVerifications EmailVerification[]
+passwordResets PasswordReset[]
 
 @@index([companyId])
 @@schema("public")
@@ -465,5 +468,49 @@ performedBy User? @relation(fields: [performedById], references: [id], onDelete:
 @@index([entityId])
 @@index([performedById])
 @@index([companyId])
+@@schema("public")
+}
+
+// ------------------ Auth Models ------------------
+
+model Session {
+id           String   @id @default(cuid())
+userId       String
+refreshToken String
+ip           String
+userAgent    String
+expiresAt    DateTime
+createdAt    DateTime @default(now())
+
+user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+@@index([userId])
+@@schema("public")
+}
+
+model EmailVerification {
+id        String   @id @default(cuid())
+userId    String
+token     String   @unique
+expiresAt DateTime
+createdAt DateTime @default(now())
+
+user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+@@index([userId])
+@@schema("public")
+}
+
+model PasswordReset {
+id        String   @id @default(cuid())
+userId    String
+token     String   @unique
+expiresAt DateTime
+used      Boolean  @default(false)
+createdAt DateTime @default(now())
+
+user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+@@index([userId])
 @@schema("public")
 }
