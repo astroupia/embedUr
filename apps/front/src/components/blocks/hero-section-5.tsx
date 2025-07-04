@@ -4,7 +4,6 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-
 import { Button } from '@/components/ui/button'
 import { InfiniteSlider } from '@/components/ui/infinite-slider'
 import { ProgressiveBlur } from '@/components/ui/progressive-blur'
@@ -41,8 +40,8 @@ export function HeroSection() {
                                         asChild
                                         size="lg"
                                         className="h-12 rounded-full pl-5 pr-3 text-base">
-                                        <Link href="#link">
-                                            <span className="text-nowrap">Start Free Trial</span>
+                                        <Link href="/dashboard">
+                                            <span className="text-nowrap">View Dashboard</span>
                                             <ChevronRight className="ml-1" />
                                         </Link>
                                     </Button>

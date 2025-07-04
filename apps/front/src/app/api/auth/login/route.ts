@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     );
 
     // Return the token and user data (without the password)
-    const { password: _, ...userWithoutPassword } = mockUser;
+    const { password: _unusedPassword, ...userWithoutPassword } = mockUser;
     
     return NextResponse.json({
       token,

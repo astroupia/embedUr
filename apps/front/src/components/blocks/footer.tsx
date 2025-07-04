@@ -28,12 +28,12 @@ interface FooterProps {
 }
 
 const siteConfig = {
-  name: "CogniMail",
-  url: "https://cognimail.com",
+  name: "EmbedUr",  
+  url: "https://embedur.com",
   links: {
-    github: "https://github.com/yourusername/cognimail",
-    twitter: "https://twitter.com/cognimail",
-    linkedin: "https://linkedin.com/company/cognimail"
+    github: "https://github.com/yourusername/embedur",
+    twitter: "https://twitter.com/embedur",
+    linkedin: "https://linkedin.com/company/embedur"
   },
   description: "AI-Powered Email Marketing Platform"
 };

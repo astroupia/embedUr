@@ -10,9 +10,39 @@ const registerSchema = z.object({
   industry: z.string().optional(),
 });
 
+// Define interfaces for type safety
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  role: string;
+  companyId: string;
+  createdAt: string;
+}
+
+interface Company {
+  id: string;
+  name: string;
+  schemaName: string;
+  email: string;
+  industry: string | null;
+  employees: number;
+  status: string;
+  createdAt: string;
+}
+
 // In-memory storage for demo purposes - replace with your database
-const users: any[] = [];
-const companies: any[] = [];
+const users: User[] = [];
+const companies: Company[] = [];
+
+// Helper function to generate unique schema name
+const generateSchemaName = (companyName: string): string => {
+  const cleanName = companyName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const randomSuffix = Math.random().toString(36).substring(2, 8);
+  return `${cleanName}${randomSuffix}`;
+};
 
 export async function POST(request: Request) {
   try {
@@ -28,39 +58,63 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if company name already exists
+    const companyExists = companies.some(company => company.name === company_name);
+    if (companyExists) {
+      return NextResponse.json(
+        { message: 'Company with this name already exists' },
+        { status: 400 }
+      );
+    }
+
     // Hash the password
     const hashedPassword = await hash(password, 10);
     
-    // Create company
+    // Create company with updated schema
     const companyId = `comp_${uuidv4()}`;
     const company = {
       id: companyId,
       name: company_name,
+      schemaName: generateSchemaName(company_name),
+      email: email, // Primary contact email for the company
       industry: industry || null,
-      created_at: new Date().toISOString(),
+      employees: 1, // Default to 1 for demo
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString(),
     };
     companies.push(company);
 
-    // Create user
+    // Create user with updated schema
     const userId = `user_${uuidv4()}`;
     const newUser = {
       id: userId,
       email,
-      name: email.split('@')[0], // Default name from email
+      firstName: company_name, // Using company name as firstName
+      lastName: 'Admin', // Hardcoded as per requirements
       password: hashedPassword,
-      role: 'admin', // First user is admin
-      company_id: companyId,
-      created_at: new Date().toISOString(),
+      role: 'ADMIN', // First user is admin
+      companyId: companyId,
+      createdAt: new Date().toISOString(),
     };
     users.push(newUser);
 
     // Return success response (without sensitive data)
-    const { password: _, ...userWithoutPassword } = newUser;
+    const { password: _unusedPassword, ...userWithoutPassword } = newUser;
     
     return NextResponse.json({
       message: 'Registration successful',
-      user_id: userId,
-      company_id: companyId,
+      userId: userId,
+      companyId: companyId,
+      company: {
+        id: company.id,
+        name: company.name,
+        schemaName: company.schemaName,
+        email: company.email,
+        industry: company.industry,
+        employees: company.employees,
+        status: company.status,
+      },
+      user: userWithoutPassword,
     }, { status: 201 });
 
   } catch (error) {

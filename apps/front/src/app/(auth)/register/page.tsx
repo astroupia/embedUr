@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignUpPage, type Testimonial } from '@/components/ui/sign-up';
+import { 
+  type RegistrationMode, 
+  type CompanyPayload, 
+  type UserPayload,
+  type CreateCompanyRequest 
+} from '@/lib/types/auth';
 
 const sampleTestimonials: Testimonial[] = [
   {
@@ -10,7 +16,7 @@ const sampleTestimonials: Testimonial[] = [
     name: "Sarah Chen",
     handle: "@sarahdigital",
     text: "Amazing platform! The user experience is seamless and the features are exactly what I needed."
-  },
+  },      
   {
     avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
     name: "Marcus Johnson",
@@ -25,7 +31,25 @@ const sampleTestimonials: Testimonial[] = [
   },
 ];
 
-type RegistrationMode = 'new-company' | 'join-company';
+// Helper function to generate unique schema name
+const generateSchemaName = (companyName: string): string => {
+  const cleanName = companyName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const randomSuffix = Math.random().toString(36).substring(2, 8);
+  return `${cleanName}${randomSuffix}`;
+};
+
+// Helper function to parse employees count
+const parseEmployeesCount = (employeesRange: string): number => {
+  const ranges = {
+    '1-10': 5,
+    '11-50': 30,
+    '51-200': 125,
+    '201-500': 350,
+    '501-1000': 750,
+    '1000+': 1500
+  };
+  return ranges[employeesRange as keyof typeof ranges] || 1;
+};
 
 export default function RegisterPage() {
   const [mode, setMode] = useState<RegistrationMode>('new-company');
@@ -42,34 +66,96 @@ export default function RegisterPage() {
       const formData = new FormData(e.currentTarget);
       const email = formData.get('email') as string;
       const password = formData.get('password') as string;
-      const company_name = formData.get('company_name') as string;
-      const industry = formData.get('industry') as string;
-      const invite_code = formData.get('invite_code') as string;
 
-      const endpoint = mode === 'new-company' 
-        ? '/api/auth/register' 
-        : '/api/auth/join';
-      
-      const payload = mode === 'new-company'
-        ? { email, password, company_name, industry }
-        : { email, password, invite_code };
+      if (mode === 'new-company') {
+        const company_name = formData.get('company_name') as string;
+        const industry = formData.get('industry') as string;
+        const employees = formData.get('employees') as string;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+        // Generate payloads according to Prisma schema
+        const companyPayload: CompanyPayload = {
+          name: company_name,
+          schemaName: generateSchemaName(company_name),
+          email: email, // Primary contact email for the company
+          industry: industry,
+          employees: parseEmployeesCount(employees),
+          // Default values for required fields
+          status: 'ACTIVE',
+          // Optional fields can be omitted or set to null
+          planId: null,
+          location: null,
+          website: null,
+          description: null,
+          logoUrl: null,
+          bannerUrl: null,
+          revenue: null,
+          linkedinUsername: null,
+          twitterUsername: null,
+          facebookUsername: null,
+          instagramUsername: null
+        };
 
-      const data = await response.json();
+        const userPayload: UserPayload = {
+          email: email,
+          firstName: company_name, // Using company name as firstName
+          lastName: 'Admin', // Hardcoded as per requirements
+          password: password,
+          // Default values for required fields
+          isVerified: false,
+          role: 'ADMIN', // First user is admin
+          // Optional fields can be omitted or set to null
+          linkedinUrl: null,
+          profileUrl: null,
+          twitterUsername: null,
+          facebookUsername: null,
+          instagramUsername: null
+        };
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
+        const requestPayload: CreateCompanyRequest = {
+          company: companyPayload,
+          user: userPayload
+        };
+
+        // Send to company creation endpoint
+        const response = await fetch('/api/auth/create-company', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestPayload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Company creation failed');
+        }
+
+        // Redirect to login with success message
+        router.push('/login?registered=true&mode=company');
+      } else {
+        // Handle create user mode (existing logic)
+        const invite_code = formData.get('invite_code') as string;
+        
+        const payload = { email, password, invite_code };
+
+        const response = await fetch('/api/auth/join', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'User creation failed');
+        }
+
+        // Redirect to login with success message
+        router.push('/login?registered=true&mode=user');
       }
-
-      // Redirect to login or dashboard based on auto-login preference
-      router.push('/login?registered=true');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during registration');
     } finally {
@@ -94,12 +180,18 @@ export default function RegisterPage() {
         mode={mode}
         onModeChange={setMode}
         onSignUp={handleSignUp}
-        onGoogleSignUp={handleGoogleSignUp}
         onSignIn={handleSignIn}
       />
       {error && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 max-w-md w-full bg-destructive/15 text-destructive p-4 rounded-lg shadow-lg">
           <p className="text-sm">{error}</p>
+        </div>
+      )}
+      {isLoading && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-card p-6 rounded-lg shadow-lg">
+            <p className="text-sm">Creating your account...</p>
+          </div>
         </div>
       )}
     </div>
