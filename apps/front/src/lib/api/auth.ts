@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 // API client for authentication operations
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -30,55 +31,42 @@ export interface LoginRequest {
 export interface LoginResponse {
 =======
 import { apiClient } from './client';
+=======
+// API client for authentication operations
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
 
-export interface LoginCredentials {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export interface RegisterRequest {
   email: string;
   password: string;
+  companyName: string;
+  firstName: string;
+  lastName: string;
 }
 
-export interface RegisterData {
-  company: {
-    name: string;
-    schemaName: string;
-    email: string;
-    industry: string;
-    employees: number;
-    status?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
-    planId?: string | null;
-    location?: string | null;
-    website?: string | null;
-    description?: string | null;
-    logoUrl?: string | null;
-    bannerUrl?: string | null;
-    revenue?: number | null;
-    linkedinUsername?: string | null;
-    twitterUsername?: string | null;
-    facebookUsername?: string | null;
-    instagramUsername?: string | null;
-  };
+export interface RegisterResponse {
+  message: string;
   user: {
+    id: string;
     email: string;
     firstName: string;
     lastName: string;
-    password: string;
-    isVerified?: boolean;
-    role?: 'ADMIN' | 'MEMBER' | 'READ_ONLY';
-    linkedinUrl?: string | null;
-    profileUrl?: string | null;
-    twitterUsername?: string | null;
-    facebookUsername?: string | null;
-    instagramUsername?: string | null;
+    companyId: string;
   };
 }
 
-export interface JoinCompanyData {
+export interface LoginRequest {
   email: string;
   password: string;
-  invite_code: string;
 }
 
+<<<<<<< HEAD
 export interface AuthResponse {
 >>>>>>> 55e844a (v1)
+=======
+export interface LoginResponse {
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
   accessToken: string;
   refreshToken: string;
   user: {
@@ -92,10 +80,14 @@ export interface AuthResponse {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
 export interface ApiError {
   message: string;
   error?: string;
   statusCode: number;
+<<<<<<< HEAD
 }
 
 class ApiClient {
@@ -162,12 +154,70 @@ export const authApi = new ApiClient(API_BASE_URL);
 =======
 export interface RefreshTokenData {
   refreshToken: string;
+=======
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
 }
 
-export interface ForgotPasswordData {
-  email: string;
+class ApiClient {
+  private baseUrl: string;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    
+    const defaultHeaders = {
+      'Content-Type': 'application/json',
+    };
+
+    const config: RequestInit = {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+    };
+
+    try {
+      const response = await fetch(url, config);
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle the specific error format from your backend
+        const errorMessage = data.message || data.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  async register(payload: RegisterRequest): Promise<RegisterResponse> {
+    return this.request<RegisterResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async login(payload: LoginRequest): Promise<LoginResponse> {
+    return this.request<LoginResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
+<<<<<<< HEAD
 export interface ResetPasswordData {
   token: string;
   password: string;
@@ -220,3 +270,7 @@ export const authApi = {
   },
 }; 
 >>>>>>> 55e844a (v1)
+=======
+// Export a singleton instance
+export const authApi = new ApiClient(API_BASE_URL); 
+>>>>>>> 238d278 (Feat: authentication integrated with UI)

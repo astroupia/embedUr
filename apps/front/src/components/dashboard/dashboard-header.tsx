@@ -20,9 +20,19 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
+import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/lib/toast-context";
 import { useRouter } from 'next/navigation';
 
 export function DashboardHeader() {
+  const { user, logout } = useAuth();
+  const { showSuccess } = useToast();
+
+  const handleLogout = async () => {
+    await logout();
+    showSuccess('Logged out successfully');
+  };
+
   const { user, logout } = useAuth();
   const { showSuccess } = useToast();
   const router = useRouter();
@@ -68,7 +78,11 @@ export function DashboardHeader() {
                   <p className="text-sm font-medium leading-none">
                     {user?.firstName} {user?.lastName}
                   </p>
+                  <p className="text-sm font-medium leading-none">
+                    {user?.firstName} {user?.lastName}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
                     {user?.email}
                   </p>
                 </div>
@@ -83,6 +97,7 @@ export function DashboardHeader() {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>

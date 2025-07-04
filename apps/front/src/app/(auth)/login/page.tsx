@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
 import { SignInPage, type Testimonial } from '@/components/ui/sign-in';
 import { authApi, type LoginRequest } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth-context';
@@ -28,6 +31,7 @@ const sampleTestimonials: Testimonial[] = [
     text: "I've tried many platforms, but this one stands out. Intuitive, reliable, and genuinely helpful for productivity."
   },
 ];
+<<<<<<< HEAD
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +47,11 @@ export default function LoginPage() {
   
   const { login, error, clearError } = useAuth();
 >>>>>>> 55e844a (v1)
+=======
+
+export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(false);
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
   const { showSuccess, showError } = useToast();
@@ -57,11 +66,15 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+<<<<<<< HEAD
 
     try {
       // Create login payload
@@ -108,6 +121,44 @@ export default function LoginPage() {
     } catch (error) {
       // Error is handled by the auth store
 >>>>>>> 55e844a (v1)
+=======
+
+    try {
+      // Create login payload
+      const loginPayload: LoginRequest = {
+        email,
+        password,
+      };
+
+      try {
+        // Call the login API
+        const response = await authApi.login(loginPayload);
+        
+        // Store auth data using context
+        login(response.user, response.accessToken, response.refreshToken);
+        
+        // Show success message
+        showSuccess('Login successful! Welcome back.');
+        
+        // Get redirect URL from query params or default to dashboard
+        const searchParams = new URLSearchParams(window.location.search);
+        const redirectTo = searchParams.get('redirect') || '/dashboard';
+        
+        // Redirect to the intended page or dashboard
+        router.push(redirectTo);
+      } catch (apiError) {
+        // Handle API errors - show the error message from the API
+        if (apiError instanceof Error) {
+          showError(apiError.message);
+        } else {
+          showError('An unexpected error occurred during login');
+        }
+      }
+    } catch (err) {
+      // Handle any other errors
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
+      showError(errorMessage);
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
     } finally {
       setIsSubmitting(false);
     }
@@ -115,6 +166,9 @@ export default function LoginPage() {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
     <div className="min-h-screen bg-background">
       <SignInPage 
         heroImageSrc="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80"
@@ -124,6 +178,7 @@ export default function LoginPage() {
         onCreateAccount={handleCreateAccount}
         isLoading={isLoading}
       />
+<<<<<<< HEAD
 =======
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -264,6 +319,8 @@ export default function LoginPage() {
         </form>
       </div>
 >>>>>>> 55e844a (v1)
+=======
+>>>>>>> 238d278 (Feat: authentication integrated with UI)
     </div>
   );
 }
