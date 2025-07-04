@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignInPage, type Testimonial } from '@/components/ui/sign-in';
+import { authApi, type LoginRequest } from '@/lib/api/auth';
+import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/lib/toast-context';
 
 const sampleTestimonials: Testimonial[] = [
   {
@@ -26,13 +29,20 @@ const sampleTestimonials: Testimonial[] = [
 ];
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login, isAuthenticated } = useAuth();
+  const { showSuccess, showError } = useToast();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -40,28 +50,40 @@ export default function LoginPage() {
     const password = formData.get('password') as string;
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      // Create login payload
+      const loginPayload: LoginRequest = {
+        email,
+        password,
+      };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+      try {
+        // Call the login API
+        const response = await authApi.login(loginPayload);
+        
+        // Store auth data using context
+        login(response.user, response.accessToken, response.refreshToken);
+        
+        // Show success message
+        showSuccess('Login successful! Welcome back.');
+        
+        // Get redirect URL from query params or default to dashboard
+        const searchParams = new URLSearchParams(window.location.search);
+        const redirectTo = searchParams.get('redirect') || '/dashboard';
+        
+        // Redirect to the intended page or dashboard
+        router.push(redirectTo);
+      } catch (apiError) {
+        // Handle API errors - show the error message from the API
+        if (apiError instanceof Error) {
+          showError(apiError.message);
+        } else {
+          showError('An unexpected error occurred during login');
+        }
       }
-
-      // Store the token and user data
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Redirect to dashboard or home
-      router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during login');
+      // Handle any other errors
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -84,12 +106,8 @@ export default function LoginPage() {
         onSignIn={handleSignIn}
         onResetPassword={handleResetPassword}
         onCreateAccount={handleCreateAccount}
+        isLoading={isLoading}
       />
-      {error && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 max-w-md w-full bg-destructive/15 text-destructive p-4 rounded-lg shadow-lg">
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
     </div>
   );
 }

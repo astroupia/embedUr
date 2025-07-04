@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignUpPage, type Testimonial } from '@/components/ui/sign-up';
+import { authApi, type RegisterRequest } from '@/lib/api/auth';
+import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/lib/toast-context';
 import { 
   type RegistrationMode, 
   type CompanyPayload, 
@@ -53,13 +56,20 @@ const parseEmployeesCount = (employeesRange: string): number => {
 
 export default function RegisterPage() {
   const [mode, setMode] = useState<RegistrationMode>('new-company');
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { showSuccess, showError } = useToast();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
 
     try {
@@ -69,70 +79,35 @@ export default function RegisterPage() {
 
       if (mode === 'new-company') {
         const company_name = formData.get('company_name') as string;
-        const industry = formData.get('industry') as string;
-        const employees = formData.get('employees') as string;
+        const firstName = formData.get('firstName') as string || company_name;
+        const lastName = formData.get('lastName') as string || 'Admin';
 
-        // Generate payloads according to Prisma schema
-        const companyPayload: CompanyPayload = {
-          name: company_name,
-          schemaName: generateSchemaName(company_name),
-          email: email, // Primary contact email for the company
-          industry: industry,
-          employees: parseEmployeesCount(employees),
-          // Default values for required fields
-          status: 'ACTIVE',
-          // Optional fields can be omitted or set to null
-          planId: null,
-          location: null,
-          website: null,
-          description: null,
-          logoUrl: null,
-          bannerUrl: null,
-          revenue: null,
-          linkedinUsername: null,
-          twitterUsername: null,
-          facebookUsername: null,
-          instagramUsername: null
+        // Create registration payload
+        const registerPayload: RegisterRequest = {
+          email,
+          password,
+          companyName: company_name,
+          firstName,
+          lastName,
         };
 
-        const userPayload: UserPayload = {
-          email: email,
-          firstName: company_name, // Using company name as firstName
-          lastName: 'Admin', // Hardcoded as per requirements
-          password: password,
-          // Default values for required fields
-          isVerified: false,
-          role: 'ADMIN', // First user is admin
-          // Optional fields can be omitted or set to null
-          linkedinUrl: null,
-          profileUrl: null,
-          twitterUsername: null,
-          facebookUsername: null,
-          instagramUsername: null
-        };
-
-        const requestPayload: CreateCompanyRequest = {
-          company: companyPayload,
-          user: userPayload
-        };
-
-        // Send to company creation endpoint
-        const response = await fetch('/api/auth/create-company', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestPayload),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Company creation failed');
+        try {
+          // Call the registration API
+          const response = await authApi.register(registerPayload);
+          
+          // Show success message from API
+          showSuccess(response.message);
+          
+          // Redirect to login with success message
+          router.push('/login?registered=true&mode=company');
+        } catch (apiError) {
+          // Handle API errors - show the error message from the API
+          if (apiError instanceof Error) {
+            showError(apiError.message);
+          } else {
+            showError('An unexpected error occurred during registration');
+          }
         }
-
-        // Redirect to login with success message
-        router.push('/login?registered=true&mode=company');
       } else {
         // Handle create user mode (existing logic)
         const invite_code = formData.get('invite_code') as string;
@@ -150,14 +125,19 @@ export default function RegisterPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || 'User creation failed');
+          showError(data.message || 'User creation failed');
+        } else {
+          // Show success message
+          showSuccess(data.message || 'User created successfully');
+          
+          // Redirect to login with success message
+          router.push('/login?registered=true&mode=user');
         }
-
-        // Redirect to login with success message
-        router.push('/login?registered=true&mode=user');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during registration');
+      // Handle any other errors
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during registration';
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -167,6 +147,8 @@ export default function RegisterPage() {
     // TODO: Implement Google sign up
     console.log('Google sign up clicked');
   };
+
+
 
   const handleSignIn = () => {
     router.push('/login');
@@ -181,19 +163,9 @@ export default function RegisterPage() {
         onModeChange={setMode}
         onSignUp={handleSignUp}
         onSignIn={handleSignIn}
+        isLoading={isLoading}
       />
-      {error && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 max-w-md w-full bg-destructive/15 text-destructive p-4 rounded-lg shadow-lg">
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
-      {isLoading && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-card p-6 rounded-lg shadow-lg">
-            <p className="text-sm">Creating your account...</p>
-          </div>
-        </div>
-      )}
+    
     </div>
   );
 }
