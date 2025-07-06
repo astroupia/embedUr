@@ -1,12 +1,9 @@
 import {
-  MailIcon,
   BarChart2,
-  Zap,
   Users,
   Palette,
   MailCheck,
-  Sparkles,
-  BarChart
+  Sparkles
 } from "lucide-react";
 
 import { BentoCard, BentoGrid } from "@/components/magicui/bento-grid";

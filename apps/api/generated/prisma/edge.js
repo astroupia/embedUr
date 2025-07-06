@@ -486,7 +486,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Code\\Work\\Mark\\code\\turbo\\apps\\api\\generated\\prisma",
+      "value": "/Users/mike/embedUr/apps/api/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -495,7 +495,7 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin",
         "native": true
       }
     ],
@@ -503,12 +503,11 @@ const config = {
       "multiSchema",
       "postgresqlExtensions"
     ],
-    "sourceFilePath": "C:\\Code\\Work\\Mark\\code\\turbo\\apps\\api\\prisma\\schema.prisma",
+    "sourceFilePath": "/Users/mike/embedUr/apps/api/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../prisma",
   "clientVersion": "6.11.0",
@@ -517,6 +516,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
