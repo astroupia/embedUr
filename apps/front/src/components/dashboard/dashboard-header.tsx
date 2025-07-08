@@ -20,14 +20,17 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
+import { useRouter } from 'next/navigation';
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
   const { showSuccess } = useToast();
+  const router = useRouter();
 
   const handleLogout = async () => {
     await logout();
     showSuccess('Logged out successfully');
+    router.push('/login');
   };
 
   return (
