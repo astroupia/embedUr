@@ -10,6 +10,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@types/minimatch": "6.0.0",
     "husky": "^9.1.7",
     "prettier": "^3.6.0",
     "turbo": "^2.5.4",

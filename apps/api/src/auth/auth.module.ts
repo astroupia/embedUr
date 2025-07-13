@@ -22,6 +22,7 @@ import { TokenRepository } from './repositories/token.repository';
 // Strategies & Guards
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { ApiKeyGuard } from './guards/api-key.guard';
 
 @Module({
   imports: [
@@ -42,11 +43,12 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     MailService,
     JwtStrategy,
     JwtAuthGuard,
+    ApiKeyGuard,
     UserRepository,
     SessionRepository,
     CompanyRepository,
     TokenRepository,
   ],
-  exports: [AuthService, JwtAuthGuard, UserRepository],
+  exports: [AuthService, JwtAuthGuard, ApiKeyGuard, UserRepository],
 })
 export class AuthModule {}
