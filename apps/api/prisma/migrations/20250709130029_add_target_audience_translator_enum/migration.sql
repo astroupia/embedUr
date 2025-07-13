@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "public"."WorkflowType" ADD VALUE 'TARGET_AUDIENCE_TRANSLATOR';

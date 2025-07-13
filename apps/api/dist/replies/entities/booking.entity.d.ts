@@ -1,0 +1,32 @@
+import { BookingStatus } from '../constants/reply.constants';
+export declare class BookingEntity {
+    readonly id: string;
+    readonly calendlyLink: string;
+    readonly scheduledTime: Date;
+    readonly status: BookingStatus;
+    readonly leadId: string;
+    readonly companyId: string;
+    readonly replyId: string | null;
+    readonly metadata: Record<string, any> | null;
+    readonly createdAt: Date;
+    readonly updatedAt: Date;
+    constructor(id: string, calendlyLink: string, scheduledTime: Date, status: BookingStatus, leadId: string, companyId: string, replyId: string | null, metadata: Record<string, any> | null, createdAt: Date, updatedAt: Date);
+    get isActive(): boolean;
+    get isConfirmed(): boolean;
+    get isCancelled(): boolean;
+    get isCompleted(): boolean;
+    get isUpcoming(): boolean;
+    get isToday(): boolean;
+    get timeUntilBooking(): number;
+    get statusLabel(): string;
+    get priority(): 'high' | 'medium' | 'low';
+    canBeRescheduled(): boolean;
+    canBeCancelled(): boolean;
+    canBeCompleted(): boolean;
+    get summary(): string;
+    get relativeTime(): string;
+    get calendlyEventId(): string | null;
+    get isOverdue(): boolean;
+    get durationMinutes(): number | null;
+    get meetingType(): string | null;
+}

@@ -1,0 +1,46 @@
+export enum N8nWebhookSource {
+  N8N = 'N8N',
+  SMARTLEAD = 'SMARTLEAD',
+  CALENDLY = 'CALENDLY',
+  APOLLO = 'APOLLO',
+  CLEARBIT = 'CLEARBIT',
+}
+
+export enum N8nWorkflowType {
+  LEAD_VALIDATION = 'LEAD_VALIDATION',
+  LEAD_ENRICHMENT = 'LEAD_ENRICHMENT',
+  EMAIL_DRAFTING = 'EMAIL_DRAFTING',
+  REPLY_HANDLING = 'REPLY_HANDLING',
+  CAMPAIGN_COMPLETION = 'CAMPAIGN_COMPLETION',
+  LEAD_ASSIGNMENT = 'LEAD_ASSIGNMENT',
+}
+
+export enum N8nNotificationLevel {
+  INFO = 'INFO',
+  SUCCESS = 'SUCCESS',
+  WARNING = 'WARNING',
+  ERROR = 'ERROR',
+}
+
+export const N8N_CONSTANTS = {
+  WEBHOOK_TIMEOUT_MS: 30000, // 30 seconds
+  MAX_RETRY_ATTEMPTS: 3,
+  RETRY_DELAY_MS: 5000, // 5 seconds
+  CLEANUP_RETENTION_DAYS: {
+    WEBHOOK_EVENTS: 30,
+    USAGE_METRICS: 90,
+    SYSTEM_NOTIFICATIONS: 60,
+  },
+  DEFAULT_LIMITS: {
+    WEBHOOK_EVENTS: 50,
+    SYSTEM_NOTIFICATIONS: 50,
+    USAGE_METRICS: 100,
+  },
+} as const;
+
+export const N8N_ENDPOINTS = {
+  COMPLETE: '/api/n8n/complete',
+  LOG: '/api/n8n/log',
+  REPLIES: '/api/n8n/replies',
+  REPLIES_COMPLETE: '/api/n8n/replies/complete',
+} as const; 
