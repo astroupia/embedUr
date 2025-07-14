@@ -6,6 +6,9 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 92de73e (chore: remove unused cookie file and update TypeScript configuration; modify analytics and campaigns pages to reflect new metrics and remove revenue display; enhance sidebar with new navigation links)
   BarChart3,
   Mail,
   Users,
@@ -18,6 +21,7 @@ import {
   Target,
   Activity,
 } from "lucide-react";
+<<<<<<< HEAD
 
 const navLinks = [
   {
@@ -89,6 +93,55 @@ const navigation = [
 
 const adminNavigation = [
   { name: 'Admin', href: '/dashboard/admin', icon: CogIcon },
+=======
+
+const navLinks = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Leads",
+    href: "/dashboard/leads",
+    icon: Users,
+  },
+  {
+    label: "Campaigns",
+    href: "/dashboard/campaigns",
+    icon: Mail,
+  },
+  {
+    label: "Inbox",
+    href: "/dashboard/inbox",
+    icon: MessageSquare,
+  },
+  {
+    label: "Analytics",
+    href: "/dashboard/analytics",
+    icon: BarChart3,
+  },
+  {
+    label: "Questionnaire",
+    href: "/dashboard/questionnaire",
+    icon: Target,
+  },
+  {
+    label: "Usage",
+    href: "/dashboard/usage",
+    icon: Activity,
+  },
+  {
+    label: "Templates",
+    href: "/dashboard/templates",
+    icon: Layers,
+  },
+  {
+    label: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
+  },
+>>>>>>> 92de73e (chore: remove unused cookie file and update TypeScript configuration; modify analytics and campaigns pages to reflect new metrics and remove revenue display; enhance sidebar with new navigation links)
 ];
 
 export default function Sidebar() {
