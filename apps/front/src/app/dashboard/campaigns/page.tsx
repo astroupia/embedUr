@@ -33,8 +33,7 @@ const campaigns = [
     sentDate: "2024-01-15",
     recipients: 12500,
     openRate: 24.8,
-    clickRate: 3.2,
-    revenue: 45200
+    clickRate: 3.2
   },
   {
     id: 2,
@@ -44,8 +43,7 @@ const campaigns = [
     sentDate: "2024-01-14",
     recipients: 18200,
     openRate: 28.1,
-    clickRate: 4.1,
-    revenue: 0
+    clickRate: 4.1
   },
   {
     id: 3,
@@ -55,8 +53,7 @@ const campaigns = [
     sentDate: "2024-01-16",
     recipients: 850,
     openRate: 0,
-    clickRate: 0,
-    revenue: 0
+    clickRate: 0
   },
   {
     id: 4,
@@ -66,8 +63,7 @@ const campaigns = [
     sentDate: "2024-01-13",
     recipients: 3200,
     openRate: 31.2,
-    clickRate: 5.8,
-    revenue: 8900
+    clickRate: 5.8
   },
   {
     id: 5,
@@ -77,8 +73,7 @@ const campaigns = [
     sentDate: "2024-01-12",
     recipients: 15600,
     openRate: 22.4,
-    clickRate: 2.9,
-    revenue: 28900
+    clickRate: 2.9
   }
 ];
 
@@ -189,15 +184,6 @@ export default function CampaignsPage() {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  {campaign.revenue > 0 && (
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        ${campaign.revenue.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">Revenue</div>
-                    </div>
-                  )}
-                  
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="rounded-lg">

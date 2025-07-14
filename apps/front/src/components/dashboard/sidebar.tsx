@@ -13,6 +13,9 @@ import {
   TrendingUp,
   Layers,
   Menu,
+  MessageSquare,
+  Target,
+  Activity,
 } from "lucide-react";
 
 const navLinks = [
@@ -32,9 +35,24 @@ const navLinks = [
     icon: Mail,
   },
   {
+    label: "Inbox",
+    href: "/dashboard/inbox",
+    icon: MessageSquare,
+  },
+  {
     label: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
+  },
+  {
+    label: "Questionnaire",
+    href: "/dashboard/questionnaire",
+    icon: Target,
+  },
+  {
+    label: "Usage",
+    href: "/dashboard/usage",
+    icon: Activity,
   },
   {
     label: "Templates",
