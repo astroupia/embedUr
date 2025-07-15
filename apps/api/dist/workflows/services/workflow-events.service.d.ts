@@ -1,0 +1,36 @@
+import { HttpService } from '@nestjs/axios';
+import { WorkflowExecutionRepository } from '../repositories/workflow-execution.repository';
+import { WorkflowRepository } from '../repositories/workflow.repository';
+import { WorkflowEntity } from '../entities/workflow.entity';
+import { WorkflowExecutionEntity } from '../entities/workflow-execution.entity';
+import { WorkflowExecutionStatus } from '../constants/workflow.constants';
+import { LeadRepository } from '../../leads/repositories/lead.repository';
+import { CampaignRepository } from '../../campaigns/repositories/campaign.repository';
+import { TargetAudienceTranslatorService } from './target-audience-translator.service';
+import { AdminRepository } from '../../admin/admin.repository';
+export declare class WorkflowEventsService {
+    private readonly httpService;
+    private readonly workflowExecutionRepository;
+    private readonly workflowRepository;
+    private readonly leadRepository;
+    private readonly campaignRepository;
+    private readonly targetAudienceTranslatorService;
+    private readonly adminRepository;
+    private readonly logger;
+    constructor(httpService: HttpService, workflowExecutionRepository: WorkflowExecutionRepository, workflowRepository: WorkflowRepository, leadRepository: LeadRepository, campaignRepository: CampaignRepository, targetAudienceTranslatorService: TargetAudienceTranslatorService, adminRepository: AdminRepository);
+    triggerWorkflowExecution(workflow: WorkflowEntity, execution: WorkflowExecutionEntity): Promise<void>;
+    handleExecutionWebhook(executionId: string, status: WorkflowExecutionStatus, outputData?: Record<string, any>, errorMessage?: string): Promise<void>;
+    handleSuccessfulExecution(executionId: string, outputData?: Record<string, any>): Promise<void>;
+    handleFailedExecution(executionId: string, errorMessage?: string): Promise<void>;
+    logExecution(workflow: WorkflowEntity, action: string, metadata?: Record<string, any>): Promise<void>;
+    private handleLeadEnrichmentSuccess;
+    private handleEmailSequenceSuccess;
+    private handleLeadRoutingSuccess;
+    private handleTargetAudienceTranslatorExecution;
+    private handleTargetAudienceTranslatorSuccess;
+    private shouldRetry;
+    private scheduleRetry;
+    private isCriticalFailure;
+    private alertAdministrators;
+    triggerWorkflowWithRetry(workflow: WorkflowEntity, execution: WorkflowExecutionEntity, maxRetries?: number): Promise<void>;
+}

@@ -23,6 +23,7 @@ const company_repository_1 = require("./repositories/company.repository");
 const token_repository_1 = require("./repositories/token.repository");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const api_key_guard_1 = require("./guards/api-key.guard");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -46,12 +47,13 @@ exports.AuthModule = AuthModule = __decorate([
             mail_service_1.MailService,
             jwt_strategy_1.JwtStrategy,
             jwt_auth_guard_1.JwtAuthGuard,
+            api_key_guard_1.ApiKeyGuard,
             user_repository_1.UserRepository,
             session_repository_1.SessionRepository,
             company_repository_1.CompanyRepository,
             token_repository_1.TokenRepository,
         ],
-        exports: [auth_service_1.AuthService, jwt_auth_guard_1.JwtAuthGuard, user_repository_1.UserRepository],
+        exports: [auth_service_1.AuthService, jwt_auth_guard_1.JwtAuthGuard, api_key_guard_1.ApiKeyGuard, user_repository_1.UserRepository],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

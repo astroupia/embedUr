@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.11.0
- * Query Engine version: 9c30299f5a0ea26a96790e13f796dc6094db3173
+ * Prisma Client JS version: 6.11.1
+ * Query Engine version: f40f79ec31188888a2e33acda0ecc8fd10a853a9
  */
 Prisma.prismaVersion = {
-  client: "6.11.0",
-  engine: "9c30299f5a0ea26a96790e13f796dc6094db3173"
+  client: "6.11.1",
+  engine: "f40f79ec31188888a2e33acda0ecc8fd10a853a9"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -253,6 +253,8 @@ exports.Prisma.ReplyScalarFieldEnum = {
   leadId: 'leadId',
   emailLogId: 'emailLogId',
   companyId: 'companyId',
+  source: 'source',
+  metadata: 'metadata',
   createdAt: 'createdAt'
 };
 
@@ -263,6 +265,7 @@ exports.Prisma.BookingScalarFieldEnum = {
   status: 'status',
   leadId: 'leadId',
   companyId: 'companyId',
+  metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -306,9 +309,14 @@ exports.Prisma.EnrichmentRequestScalarFieldEnum = {
   provider: 'provider',
   requestData: 'requestData',
   responseData: 'responseData',
+  status: 'status',
   leadId: 'leadId',
   companyId: 'companyId',
-  createdAt: 'createdAt'
+  errorMessage: 'errorMessage',
+  retryCount: 'retryCount',
+  durationMs: 'durationMs',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.UsageMetricScalarFieldEnum = {
@@ -318,6 +326,16 @@ exports.Prisma.UsageMetricScalarFieldEnum = {
   period: 'period',
   companyId: 'companyId',
   recordedAt: 'recordedAt'
+};
+
+exports.Prisma.AdminActionLogScalarFieldEnum = {
+  id: 'id',
+  action: 'action',
+  targetType: 'targetType',
+  targetId: 'targetId',
+  details: 'details',
+  performedBy: 'performedBy',
+  timestamp: 'timestamp'
 };
 
 exports.Prisma.WebhookEventScalarFieldEnum = {
@@ -366,6 +384,25 @@ exports.Prisma.PasswordResetScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.TargetAudienceTranslatorScalarFieldEnum = {
+  id: 'id',
+  inputFormat: 'inputFormat',
+  targetAudienceData: 'targetAudienceData',
+  structuredData: 'structuredData',
+  config: 'config',
+  leads: 'leads',
+  enrichmentSchema: 'enrichmentSchema',
+  interpretedCriteria: 'interpretedCriteria',
+  reasoning: 'reasoning',
+  confidence: 'confidence',
+  status: 'status',
+  errorMessage: 'errorMessage',
+  companyId: 'companyId',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -404,6 +441,7 @@ exports.CompanyStatus = exports.$Enums.CompanyStatus = {
 
 exports.UserRole = exports.$Enums.UserRole = {
   ADMIN: 'ADMIN',
+  SUPER_ADMIN: 'SUPER_ADMIN',
   MEMBER: 'MEMBER',
   READ_ONLY: 'READ_ONLY'
 };
@@ -446,7 +484,14 @@ exports.ReplyClassification = exports.$Enums.ReplyClassification = {
   NOT_INTERESTED: 'NOT_INTERESTED',
   AUTO_REPLY: 'AUTO_REPLY',
   UNSUBSCRIBE: 'UNSUBSCRIBE',
-  QUESTION: 'QUESTION'
+  QUESTION: 'QUESTION',
+  NEUTRAL: 'NEUTRAL'
+};
+
+exports.ReplySource = exports.$Enums.ReplySource = {
+  SMARTLEAD: 'SMARTLEAD',
+  MANUAL: 'MANUAL',
+  WEBHOOK: 'WEBHOOK'
 };
 
 exports.BookingStatus = exports.$Enums.BookingStatus = {
@@ -457,6 +502,7 @@ exports.BookingStatus = exports.$Enums.BookingStatus = {
 };
 
 exports.WorkflowType = exports.$Enums.WorkflowType = {
+  TARGET_AUDIENCE_TRANSLATOR: 'TARGET_AUDIENCE_TRANSLATOR',
   LEAD_ENRICHMENT: 'LEAD_ENRICHMENT',
   EMAIL_SEQUENCE: 'EMAIL_SEQUENCE',
   LEAD_ROUTING: 'LEAD_ROUTING'
@@ -470,13 +516,21 @@ exports.AIInteractionType = exports.$Enums.AIInteractionType = {
 exports.EnrichmentProvider = exports.$Enums.EnrichmentProvider = {
   APOLLO: 'APOLLO',
   DROP_CONTACT: 'DROP_CONTACT',
-  CLEARBIT: 'CLEARBIT'
+  CLEARBIT: 'CLEARBIT',
+  N8N: 'N8N'
 };
 
 exports.WebhookSource = exports.$Enums.WebhookSource = {
   SMARTLEAD: 'SMARTLEAD',
   CALENDLY: 'CALENDLY',
   N8N: 'N8N'
+};
+
+exports.InputFormat = exports.$Enums.InputFormat = {
+  FREE_TEXT: 'FREE_TEXT',
+  STRUCTURED_JSON: 'STRUCTURED_JSON',
+  CSV_UPLOAD: 'CSV_UPLOAD',
+  FORM_INPUT: 'FORM_INPUT'
 };
 
 exports.Prisma.ModelName = {
@@ -497,11 +551,13 @@ exports.Prisma.ModelName = {
   AIInteraction: 'AIInteraction',
   EnrichmentRequest: 'EnrichmentRequest',
   UsageMetric: 'UsageMetric',
+  AdminActionLog: 'AdminActionLog',
   WebhookEvent: 'WebhookEvent',
   AuditTrail: 'AuditTrail',
   Session: 'Session',
   EmailVerification: 'EmailVerification',
-  PasswordReset: 'PasswordReset'
+  PasswordReset: 'PasswordReset',
+  TargetAudienceTranslator: 'TargetAudienceTranslator'
 };
 
 /**

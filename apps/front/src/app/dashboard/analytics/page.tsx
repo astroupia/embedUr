@@ -193,16 +193,16 @@ export default function AnalyticsPage() {
         <Card className="border-0 bg-white dark:bg-zinc-900 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Total Revenue
+              Conversion Rate
             </CardTitle>
             <div className="p-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm">
               <TrendingUp className="h-4 w-4 text-white" />
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="text-3xl font-bold text-zinc-900 dark:text-white">$89,700</div>
+            <div className="text-3xl font-bold text-zinc-900 dark:text-white">12.8%</div>
             <p className="text-xs text-green-600 dark:text-green-400">
-              +15.2% this month
+              +2.3% this month
             </p>
           </CardContent>
         </Card>

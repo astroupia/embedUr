@@ -27,6 +27,7 @@ enum CompanyStatus {
 
 enum UserRole {
   ADMIN
+  SUPER_ADMIN
   MEMBER
   READ_ONLY
 
@@ -80,6 +81,15 @@ enum ReplyClassification {
   AUTO_REPLY
   UNSUBSCRIBE
   QUESTION
+  NEUTRAL
+
+  @@schema("public")
+}
+
+enum ReplySource {
+  SMARTLEAD
+  MANUAL
+  WEBHOOK
 
   @@schema("public")
 }
@@ -94,6 +104,7 @@ enum BookingStatus {
 }
 
 enum WorkflowType {
+  TARGET_AUDIENCE_TRANSLATOR
   LEAD_ENRICHMENT
   EMAIL_SEQUENCE
   LEAD_ROUTING
@@ -112,6 +123,7 @@ enum EnrichmentProvider {
   APOLLO
   DROP_CONTACT
   CLEARBIT
+  N8N
 
   @@schema("public")
 }
@@ -120,6 +132,15 @@ enum WebhookSource {
   SMARTLEAD
   CALENDLY
   N8N
+
+  @@schema("public")
+}
+
+enum InputFormat {
+  FREE_TEXT
+  STRUCTURED_JSON
+  CSV_UPLOAD
+  FORM_INPUT
 
   @@schema("public")
 }
@@ -178,6 +199,7 @@ model User {
   sessions           Session[]
   emailVerifications EmailVerification[]
   passwordResets     PasswordReset[]
+  adminActionLogs    AdminActionLog[]
 
   @@index([companyId])
   @@schema("public")
@@ -331,6 +353,8 @@ model Reply {
   leadId         String
   emailLogId     String              @unique
   companyId      String
+  source         ReplySource         @default(MANUAL)
+  metadata       Json?
   createdAt      DateTime            @default(now())
 
   lead     Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
@@ -348,6 +372,7 @@ model Booking {
   status        BookingStatus @default(BOOKED)
   leadId        String
   companyId     String
+  metadata      Json?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @default(now())
 
@@ -418,14 +443,20 @@ model EnrichmentRequest {
   provider     EnrichmentProvider
   requestData  Json
   responseData Json?
+  status       String             @default("PENDING")
   leadId       String
   companyId    String
+  errorMessage String?
+  retryCount   Int                @default(0)
+  durationMs   Int?
   createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@index([leadId])
   @@index([companyId])
+  @@index([status])
   @@schema("public")
 }
 
@@ -437,8 +468,27 @@ model UsageMetric {
   companyId  String
   recordedAt DateTime @default(now())
 
+  @@unique([metricName, companyId, period])
   @@index([metricName])
   @@index([companyId])
+  @@schema("public")
+}
+
+model AdminActionLog {
+  id          String   @id @default(cuid())
+  action      String
+  targetType  String
+  targetId    String
+  details     Json?
+  performedBy String
+  timestamp   DateTime @default(now())
+
+  performedByUser User? @relation(fields: [performedBy], references: [id], onDelete: SetNull)
+
+  @@index([performedBy])
+  @@index([action])
+  @@index([targetType])
+  @@index([timestamp])
   @@schema("public")
 }
 
@@ -512,5 +562,29 @@ model PasswordReset {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@schema("public")
+}
+
+model TargetAudienceTranslator {
+  id                  String      @id @default(cuid())
+  inputFormat         InputFormat
+  targetAudienceData  String
+  structuredData      Json?
+  config              Json?
+  leads               Json?
+  enrichmentSchema    Json?
+  interpretedCriteria Json?
+  reasoning           String?
+  confidence          Float?
+  status              String      @default("PENDING")
+  errorMessage        String?
+  companyId           String
+  createdBy           String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+  @@index([inputFormat])
   @@schema("public")
 }

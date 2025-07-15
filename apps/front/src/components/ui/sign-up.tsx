@@ -19,6 +19,7 @@ interface SignUpPageProps {
   onSignIn?: () => void;
   mode?: 'new-company' | 'create-user';
   onModeChange?: (mode: 'new-company' | 'create-user') => void;
+  isLoading?: boolean;
 }
 
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -47,6 +48,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
   onSignIn,
   mode = 'new-company',
   onModeChange,
+  isLoading = false,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -219,9 +221,17 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
               <div className="pt-2">
                 <button 
                   type="submit" 
-                  className="animate-element animate-delay-900 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                  disabled={isLoading}
+                  className="animate-element animate-delay-900 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {mode === 'new-company' ? 'Create Company & Account' : 'Create Account'}
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      {mode === 'new-company' ? 'Creating Company & Account...' : 'Creating Account...'}
+                    </div>
+                  ) : (
+                    mode === 'new-company' ? 'Create Company & Account' : 'Create Account'
+                  )}
                 </button>
               </div>
             </form>

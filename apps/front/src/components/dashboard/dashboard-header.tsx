@@ -18,8 +18,21 @@ import {
   LogOut, 
   Plus
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/lib/toast-context";
+import { useRouter } from 'next/navigation';
 
 export function DashboardHeader() {
+  const { user, logout } = useAuth();
+  const { showSuccess } = useToast();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    showSuccess('Logged out successfully');
+    router.push('/login');
+  };
+
   return (
     <header className="sticky top-0 z-20 w-full border-b bg-white/80 dark:bg-zinc-950/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="flex items-center justify-between h-16 px-4 md:px-8">
@@ -52,9 +65,11 @@ export function DashboardHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Jane Doe</p>
+                  <p className="text-sm font-medium leading-none">
+                    {user?.firstName} {user?.lastName}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    jane@embedur.com
+                    {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -68,7 +83,7 @@ export function DashboardHeader() {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
