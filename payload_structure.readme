@@ -1,0 +1,1002 @@
+Let me examine the auth DTOs and controllers to understand the authentication API structure.
+Read file: apps/api/src/auth/dtos/login.dto.ts Read file: apps/api/src/auth/dtos/register.dto.ts Read file: apps/api/src/auth/dtos/user.dto.ts Read file: apps/api/src/auth/dtos/company.dto.ts Read file: apps/api/src/auth/controllers/auth.controller.ts Read file: apps/api/src/auth/controllers/password.controller.ts Read file: apps/api/src/auth/controllers/verification.controller.ts Now let me examine the other DTOs in the auth module:
+Read file: apps/api/src/auth/dtos/forgot-password.dto.ts Read file: apps/api/src/auth/dtos/reset-password.dto.ts Read file: apps/api/src/auth/dtos/verify-email.dto.ts Read file: apps/api/src/auth/dtos/refresh-token.dto.ts Now let me examine the auth service to understand the response structures:
+Read file: apps/api/src/auth/services/auth.service.ts Read file: apps/api/src/auth/services/auth.service.ts Now let me examine the other modules. Let me start with the campaigns module:
+Ran tool Ran tool Read file: apps/api/src/campaigns/dto/campaign.dto.ts Read file: apps/api/src/campaigns/dto/query-campaigns-cursor.dto.ts Read file: apps/api/src/campaigns/constants/campaign.constants.ts Read file: apps/api/src/campaigns/controllers/campaign.controller.ts Read file: apps/api/src/campaigns/entities/campaign.entity.ts Now let me examine the leads module:
+Ran tool Ran tool Read file: apps/api/src/leads/dtos/lead.dto.ts Read file: apps/api/src/leads/dtos/lead-response.dto.ts Read file: apps/api/src/leads/dtos/query-leads-cursor.dto.ts Read file: apps/api/src/leads/constants/lead.constants.ts Read file: apps/api/src/leads/controllers/lead.controller.ts Now let me examine the workflows module:
+Ran tool Ran tool Read file: apps/api/src/workflows/dto/workflow.dto.ts Read file: apps/api/src/workflows/dto/workflow-response.dto.ts Read file: apps/api/src/workflows/constants/workflow.constants.ts Now let me examine the AI Persona module:
+Ran tool Ran tool Read file: apps/api/src/ai-persona/dto/create-ai-persona.dto.ts Read file: apps/api/src/ai-persona/dto/update-ai-persona.dto.ts Read file: apps/api/src/ai-persona/dto/ai-persona-response.dto.ts Read file: apps/api/src/ai-persona/ai-persona.controller.ts Now let me examine the replies module:
+Ran tool Ran tool Read file: apps/api/src/replies/dto/reply.dto.ts Read file: apps/api/src/replies/constants/reply.constants.ts Now let me examine the admin module:
+Ran tool Ran tool Read file: apps/api/src/admin/dto/global-metrics.dto.ts Now let me examine the usage metrics module:
+Ran tool Ran tool Read file: apps/api/src/usage-metrics/dto/create-usage-metric.dto.ts Read file: apps/api/src/usage-metrics/dto/usage-metric-response.dto.ts Now let me examine the enrichment module:
+Ran tool Ran tool Read file: apps/api/src/enrichment/dto/enrichment.dto.ts Now let me examine the N8N module:
+Ran tool Ran tool Read file: apps/api/src/n8n/dto/n8n.dto.ts Now I have a comprehensive understanding of the backend API structure. Let me create the detailed documentation for the frontend team.
+Backend API Documentation
+This documentation provides comprehensive details about all API endpoints, request/response payloads, and important implementation notes for the frontend development team.
+Authentication & Authorization
+POST /auth/register
+Description: Register a new user and company account.
+Request Payload:
+{
+  companyName: string;        // Required, 2-100 characters
+  email: string;             // Required, valid email format
+  password: string;          // Required, 8-100 characters
+  firstName?: string;        // Optional, 1-50 characters
+  lastName?: string;         // Optional, 1-50 characters
+}
+
+Response:
+{
+  message: string;           // Success message
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    companyId: string;
+  }
+}
+
+Notes:
+Email verification token is automatically generated and sent
+Company is created with default status ACTIVE
+User role defaults to USER
+
+POST /auth/login
+Description: Authenticate user and receive access tokens.
+Request Payload:
+{
+  email: string;             // Required, valid email format
+  password: string;          // Required, non-empty string
+}
+
+Response:
+{
+  accessToken: string;       // JWT token, expires in 15 minutes
+  refreshToken: string;      // JWT token, expires in 7 days
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: UserRole;          // 'USER' | 'ADMIN' | 'OWNER'
+    companyId: string;
+  }
+}
+
+Notes:
+Session is stored with IP and User-Agent for security
+Refresh token should be stored securely for token renewal
+
+POST /auth/refresh
+Description: Refresh access token using refresh token.
+Request Payload:
+{
+  refreshToken: string;      // Required, valid refresh token
+}
+
+Response:
+{
+  accessToken: string;       // New JWT token, expires in 15 minutes
+  refreshToken: string;      // New refresh token, expires in 7 days
+}
+
+Notes:
+Old refresh token is invalidated
+New session is created with same IP/User-Agent
+
+POST /auth/logout
+Description: Logout user and invalidate session.
+Request Payload:
+{
+  refreshToken: string;      // Required, refresh token to invalidate
+}
+
+Response:
+{
+  message: string;           // "Logged out successfully"
+}
+
+Notes:
+Requires JWT authentication
+Session is deleted from database
+
+POST /auth/password/forgot
+Description: Request password reset email.
+Request Payload:
+{
+  email: string;             // Required, valid email format
+}
+
+Response:
+{
+  message: string;           // Generic message (doesn't reveal if email exists)
+}
+
+Notes:
+Reset token expires in 1 hour
+Email is sent with reset link
+
+POST /auth/password/reset
+Description: Reset password using reset token.
+Request Payload:
+{
+  token: string;             // Required, valid reset token
+  newPassword: string;       // Required, 8-100 characters
+}
+
+Response:
+{
+  message: string;           // "Password reset successfully"
+}
+
+Notes:
+All user sessions are invalidated after password reset
+Token can only be used once
+
+GET /auth/verify
+Description: Verify email address using verification token.
+Query Parameters:
+{
+  token: string;             // Required, valid verification token
+}
+
+Response:
+{
+  message: string;           // "Email verified successfully"
+}
+
+Notes:
+Token expires in 24 hours
+Token is deleted after successful verification
+
+Campaigns
+POST /campaigns
+Description: Create a new campaign.
+Request Payload:
+{
+  name: string;              // Required, 1-100 characters
+  description?: string;      // Optional, max 500 characters
+  aiPersonaId?: string;      // Optional, AI persona ID for personalization
+  workflowId?: string;       // Optional, workflow ID for automation
+}
+
+Response: CampaignEntity
+{
+  id: string;
+  name: string;
+  description: string | null;
+  status: CampaignStatus;    // 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'ARCHIVED'
+  aiPersonaId: string | null;
+  workflowId: string | null;
+  companyId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  aiPersona?: {              // Optional, included in response
+    id: string;
+    name: string;
+    description?: string;
+  };
+  workflow?: {               // Optional, included in response
+    id: string;
+    name: string;
+    type: string;
+  };
+  leadCount?: number;        // Optional, number of leads in campaign
+  score: number;             // Computed business score
+  isActive: boolean;         // Computed property
+  isEditable: boolean;       // Computed property
+  isDeletable: boolean;      // Computed property
+  hasAI: boolean;            // Computed property
+  hasWorkflow: boolean;      // Computed property
+}
+
+Notes:
+Campaign starts with DRAFT status
+Score is calculated based on status, AI persona, workflow, and lead count
+Business logic methods available for status transitions
+
+GET /campaigns
+Description: Get all campaigns with cursor-based pagination.
+Query Parameters:
+{
+  cursor?: string;           // Optional, ID of last seen campaign
+  take?: number;             // Optional, 1-100, default: 20
+  status?: CampaignStatus;   // Optional, filter by status
+  search?: string;           // Optional, search by name
+}
+
+Response:
+{
+  data: CampaignEntity[];
+  nextCursor: string | null; // null if no more results
+}
+
+Notes:
+Results are ordered by creation date (newest first)
+Search is case-insensitive and matches partial names
+
+GET /campaigns/stats
+Description: Get campaign statistics.
+Response:
+{
+  total: number;
+  active: number;
+  byStatus: {
+    DRAFT: number;
+    ACTIVE: number;
+    PAUSED: number;
+    COMPLETED: number;
+    ARCHIVED: number;
+  };
+}
+
+
+GET /campaigns/status/:status
+Description: Get campaigns by specific status.
+Path Parameters:
+{
+  status: CampaignStatus;    // Required, valid campaign status
+}
+
+Response: CampaignEntity[]
+
+GET /campaigns/:id
+Description: Get campaign by ID.
+Path Parameters:
+{
+  id: string;                // Required, campaign ID
+}
+
+Response: CampaignEntity
+
+PATCH /campaigns/:id
+Description: Update campaign.
+Path Parameters:
+{
+  id: string;                // Required, campaign ID
+}
+
+Request Payload:
+{
+  name?: string;             // Optional, 1-100 characters
+  description?: string;      // Optional, max 500 characters
+  status?: CampaignStatus;   // Optional, must follow valid transitions
+  aiPersonaId?: string;      // Optional, AI persona ID
+  workflowId?: string;       // Optional, workflow ID
+}
+
+Response: CampaignEntity
+Notes:
+Status transitions follow business rules:
+DRAFT → ACTIVE, ARCHIVED
+ACTIVE → PAUSED, COMPLETED, ARCHIVED
+PAUSED → ACTIVE, COMPLETED, ARCHIVED
+COMPLETED → ARCHIVED
+ARCHIVED → no transitions allowed
+
+POST /campaigns/:id/activate
+Description: Activate a campaign.
+Response: CampaignEntity
+Notes:
+Only works for DRAFT or PAUSED campaigns
+
+POST /campaigns/:id/pause
+Description: Pause a campaign.
+Response: CampaignEntity
+Notes:
+Only works for ACTIVE campaigns
+
+POST /campaigns/:id/complete
+Description: Complete a campaign.
+Response: CampaignEntity
+Notes:
+Only works for ACTIVE or PAUSED campaigns
+
+POST /campaigns/:id/archive
+Description: Archive a campaign.
+Response: CampaignEntity
+Notes:
+Works for any status except ARCHIVED
+
+DELETE /campaigns/:id
+Description: Delete a campaign.
+Response: 204 No Content
+Notes:
+Only works for DRAFT or ARCHIVED campaigns
+
+Leads
+POST /leads
+Description: Create a new lead.
+Request Payload:
+{
+  fullName: string;          // Required
+  email: string;             // Required, valid email format
+  linkedinUrl?: string;      // Optional
+  enrichmentData?: Record<string, any>; // Optional, enrichment data
+  verified?: boolean;        // Optional, default: false
+  status?: LeadStatus;       // Optional, default: 'NEW'
+  companyId?: string;        // Optional, defaults to user's company
+  campaignId: string;        // Required, campaign ID
+}
+
+Response: LeadResponseDto
+{
+  id: string;
+  fullName: string;
+  email: string;
+  linkedinUrl: string | null;
+  enrichmentData: EnrichmentData | null;
+  verified: boolean;
+  status: LeadStatus;        // 'NEW' | 'CONTACTED' | 'INTERESTED' | 'NOT_INTERESTED' | 'BOOKED' | 'DO_NOT_CONTACT'
+  companyId: string;
+  campaignId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  campaign?: {               // Optional, included in response
+    id: string;
+    name: string;
+    aiPersona?: {
+      id: string;
+      name: string;
+      description: string | null;
+      prompt: string;
+      parameters: any;
+    };
+  };
+  score: number;             // Computed business score
+  isQualified: boolean;      // Computed property
+  hasEnrichmentData: boolean; // Computed property
+  companyName: string | null; // Extracted from enrichment data
+  jobTitle: string | null;   // Extracted from enrichment data
+  location: string | null;   // Extracted from enrichment data
+}
+
+Notes:
+Lead status defaults to NEW
+Score is calculated based on verification, LinkedIn URL, enrichment data, and recent activity
+Enrichment data can include: company, title, location, industry, linkedinProfile, phone, website
+
+GET /leads
+Description: Get all leads with cursor-based pagination.
+Query Parameters:
+{
+  cursor?: string;           // Optional, ID of last seen lead
+  take?: number;             // Optional, 1-100, default: 20
+  status?: LeadStatus;       // Optional, filter by status
+  search?: string;           // Optional, search in full name and email
+  campaignId?: string;       // Optional, filter by campaign
+}
+
+Response:
+{
+  data: LeadResponseDto[];
+  nextCursor: string | null;
+}
+
+
+GET /leads/stats
+Description: Get lead statistics.
+Response:
+{
+  total: number;
+  byStatus: {
+    NEW: number;
+    CONTACTED: number;
+    INTERESTED: number;
+    NOT_INTERESTED: number;
+    BOOKED: number;
+    DO_NOT_CONTACT: number;
+  };
+}
+
+
+GET /leads/status/:status
+Description: Get leads by specific status.
+Path Parameters:
+{
+  status: LeadStatus;        // Required, valid lead status
+}
+
+Response: LeadResponseDto[]
+
+GET /leads/:id
+Description: Get lead by ID.
+Path Parameters:
+{
+  id: string;                // Required, lead ID
+}
+
+Response: LeadResponseDto
+
+PATCH /leads/:id
+Description: Update lead.
+Path Parameters:
+{
+  id: string;                // Required, lead ID
+}
+
+Request Payload:
+{
+  fullName?: string;         // Optional
+  email?: string;            // Optional, valid email format
+  linkedinUrl?: string;      // Optional
+  enrichmentData?: Record<string, any>; // Optional
+  verified?: boolean;        // Optional
+  status?: LeadStatus;       // Optional
+}
+
+Response: LeadResponseDto
+
+DELETE /leads/:id
+Description: Delete lead.
+Path Parameters:
+{
+  id: string;                // Required, lead ID
+}
+
+Response: 204 No Content
+
+POST /leads/:id/enrich
+Description: Manually trigger enrichment for a lead.
+Path Parameters:
+{
+  id: string;                // Required, lead ID
+}
+
+Response: LeadResponseDto
+Notes:
+Triggers enrichment workflow
+Returns updated lead with enrichment data
+
+Workflows
+POST /workflows
+Description: Create a new workflow.
+Request Payload:
+{
+  name: string;              // Required, 1-100 characters
+  type: WorkflowType;        // Required, 'LEAD_ENRICHMENT' | 'EMAIL_SEQUENCE' | 'LEAD_ROUTING' | 'TARGET_AUDIENCE_TRANSLATOR'
+  n8nWorkflowId: string;     // Required, N8N workflow ID
+}
+
+Response: WorkflowResponseDto
+{
+  id: string;
+  name: string;
+  type: WorkflowType;
+  n8nWorkflowId: string;
+  companyId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  executionCount: number;
+  lastExecution?: {          // Optional
+    id: string;
+    status: string;
+    startTime: Date;
+    endTime?: Date;
+    durationMs?: number;
+    triggeredBy: string;
+  };
+  isActive: boolean;         // Computed property
+  typeDescription: string;   // Human-readable type description
+  canBeDeleted: boolean;     // Computed property
+  isEnrichmentWorkflow: boolean; // Computed property
+  isEmailSequenceWorkflow: boolean; // Computed property
+  isRoutingWorkflow: boolean; // Computed property
+}
+
+
+GET /workflows
+Description: Get all workflows with cursor-based pagination.
+Query Parameters:
+{
+  cursor?: string;           // Optional, ID of last seen workflow
+  take?: number;             // Optional, 1-100, default: 20
+  type?: WorkflowType;       // Optional, filter by type
+  search?: string;           // Optional, search by name
+}
+
+Response:
+{
+  data: WorkflowResponseDto[];
+  nextCursor: string | null;
+}
+
+
+GET /workflows/:id
+Description: Get workflow by ID.
+Path Parameters:
+{
+  id: string;                // Required, workflow ID
+}
+
+Response: WorkflowResponseDto
+
+PATCH /workflows/:id
+Description: Update workflow.
+Path Parameters:
+{
+  id: string;                // Required, workflow ID
+}
+
+Request Payload:
+{
+  name?: string;             // Optional, 1-100 characters
+  n8nWorkflowId?: string;    // Optional, N8N workflow ID
+}
+
+Response: WorkflowResponseDto
+
+DELETE /workflows/:id
+Description: Delete workflow.
+Path Parameters:
+{
+  id: string;                // Required, workflow ID
+}
+
+Response: 204 No Content
+
+POST /workflows/:id/execute
+Description: Execute a workflow.
+Path Parameters:
+{
+  id: string;                // Required, workflow ID
+}
+
+Request Payload:
+{
+  inputData: Record<string, any>; // Required, input data for workflow
+  leadId?: string;           // Optional, related lead ID
+  campaignId?: string;       // Optional, related campaign ID
+}
+
+Response: WorkflowExecutionResponseDto
+{
+  id: string;
+  workflowId: string;
+  status: WorkflowExecutionStatus; // 'STARTED' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'TIMEOUT' | 'CANCELLED'
+  inputData: Record<string, any>;
+  outputData?: Record<string, any>; // Optional
+  errorMessage?: string;     // Optional
+  startTime: Date;
+  endTime?: Date;            // Optional
+  durationMs?: number;       // Optional
+  triggeredBy: string;
+  leadId?: string;           // Optional
+  campaignId?: string;       // Optional
+}
+
+
+GET /workflows/:id/executions
+Description: Get workflow executions.
+Query Parameters:
+{
+  cursor?: string;           // Optional, ID of last seen execution
+  take?: number;             // Optional, 1-100, default: 20
+  status?: WorkflowExecutionStatus; // Optional, filter by status
+}
+
+Response:
+{
+  data: WorkflowExecutionResponseDto[];
+  nextCursor: string | null;
+}
+
+
+POST /workflows/executions/:id/retry
+Description: Retry a failed workflow execution.
+Path Parameters:
+{
+  id: string;                // Required, execution ID
+}
+
+Request Payload:
+{
+  inputData?: Record<string, any>; // Optional, updated input data
+}
+
+Response: WorkflowExecutionResponseDto
+
+AI Personas
+POST /ai-personas
+Description: Create a new AI persona.
+Request Payload:
+{
+  name: string;              // Required
+  description?: string;      // Optional
+  prompt: string;            // Required, AI prompt
+  parameters?: Record<string, any>; // Optional, AI parameters
+}
+
+Response: AIPersonaResponseDto
+{
+  id: string;
+  name: string;
+  description?: string;
+  prompt: string;
+  parameters?: Record<string, any>;
+  companyId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+
+GET /ai-personas
+Description: Get all AI personas for the company.
+Response: AIPersonaResponseDto[]
+
+GET /ai-personas/:id
+Description: Get AI persona by ID.
+Path Parameters:
+{
+  id: string;                // Required, AI persona ID
+}
+
+Response: AIPersonaResponseDto
+
+PUT /ai-personas/:id
+Description: Update AI persona.
+Path Parameters:
+{
+  id: string;                // Required, AI persona ID
+}
+
+Request Payload:
+{
+  name?: string;             // Optional
+  description?: string;      // Optional
+  prompt?: string;           // Optional
+  parameters?: Record<string, any>; // Optional
+}
+
+Response: AIPersonaResponseDto
+
+DELETE /ai-personas/:id
+Description: Delete AI persona.
+Path Parameters:
+{
+  id: string;                // Required, AI persona ID
+}
+
+Response: 204 No Content
+Notes:
+Cannot delete if linked to active campaigns
+
+Replies
+POST /replies
+Description: Create a new reply.
+Request Payload:
+{
+  content: string;           // Required, 1-10000 characters
+  leadId: string;            // Required, valid CUID format
+  emailLogId: string;        // Required, valid CUID format
+  source?: ReplySource;      // Optional, 'SMARTLEAD' | 'MANUAL' | 'WEBHOOK'
+  metadata?: Record<string, any>; // Optional
+}
+
+Response: ReplyResponseDto
+{
+  id: string;
+  content: string;
+  classification: ReplyClassification; // 'INTERESTED' | 'NOT_INTERESTED' | 'AUTO_REPLY' | 'UNSUBSCRIBE' | 'QUESTION' | 'NEUTRAL'
+  leadId: string;
+  emailLogId: string;
+  companyId: string;
+  handledBy: string | null;
+  source: ReplySource;
+  metadata: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  isInterested: boolean;     // Computed property
+  isNegative: boolean;       // Computed property
+  isNeutral: boolean;        // Computed property
+  isAutoReply: boolean;      // Computed property
+  sentimentScore: number;    // Computed property
+  requiresAttention: boolean; // Computed property
+  summary: string;           // Computed property
+  priority: 'high' | 'medium' | 'low'; // Computed property
+  isRecent: boolean;         // Computed property
+}
+
+
+GET /replies
+Description: Get replies with filtering and pagination.
+Query Parameters:
+{
+  leadId?: string;           // Optional, filter by lead ID
+  emailLogId?: string;       // Optional, filter by email log ID
+  classification?: ReplyClassification; // Optional, filter by classification
+  source?: ReplySource;      // Optional, filter by source
+  requiresAttention?: boolean; // Optional, filter by attention required
+  recent?: boolean;          // Optional, last 24 hours only
+  cursor?: string;           // Optional, pagination cursor
+  limit?: number;            // Optional, default: 20
+}
+
+Response:
+{
+  data: ReplyResponseDto[];
+  nextCursor: string | null;
+}
+
+
+GET /replies/stats
+Description: Get reply statistics.
+Response: ReplyStatsDto
+{
+  total: number;
+  byClassification: Record<ReplyClassification, number>;
+  bySource: Record<ReplySource, number>;
+  recentCount: number;
+  averageResponseTime: number;
+  positiveRate: number;
+}
+
+
+PATCH /replies/:id
+Description: Update reply.
+Path Parameters:
+{
+  id: string;                // Required, reply ID
+}
+
+Request Payload:
+{
+  content?: string;          // Optional, 1-10000 characters
+  classification?: ReplyClassification; // Optional
+  handledBy?: string;        // Optional, user who handled the reply
+  metadata?: Record<string, any>; // Optional
+}
+
+Response: ReplyResponseDto
+
+Enrichment
+POST /enrichment/trigger
+Description: Trigger enrichment for a lead.
+Request Payload:
+{
+  leadId: string;            // Required, lead ID to enrich
+  provider?: EnrichmentProvider; // Optional, 'APOLLO' | 'CLEARBIT' | 'DROP_CONTACT' | 'HUNTER' | 'SNOV'
+  requestData?: Record<string, any>; // Optional, additional request data
+}
+
+Response:
+{
+  message: string;           // Success message
+  enrichmentId: string;      // Enrichment request ID
+}
+
+
+GET /enrichment/stats
+Description: Get enrichment statistics.
+Response: EnrichmentStatsDto
+{
+  total: number;
+  successful: number;
+  failed: number;
+  pending: number;
+  byProvider: Record<EnrichmentProvider, {
+    total: number;
+    successful: number;
+    failed: number;
+  }>;
+  averageDurationSeconds: number;
+}
+
+
+POST /enrichment/:id/retry
+Description: Retry a failed enrichment.
+Path Parameters:
+{
+  id: string;                // Required, enrichment ID
+}
+
+Request Payload:
+{
+  requestData?: Record<string, any>; // Optional, updated request data
+  provider?: EnrichmentProvider; // Optional, alternative provider
+}
+
+Response:
+{
+  message: string;           // Success message
+}
+
+
+Usage Metrics
+GET /usage-metrics/overview
+Description: Get usage metrics overview for the company.
+Response: UsageMetricsOverviewDto
+{
+  companyId: string;
+  metrics: UsageMetricResponseDto[];
+  planLimits: {
+    leads: number;
+    workflows: number;
+    aiInteractions: number;
+    emails: number;
+    enrichments: number;
+  };
+  overageDetected: boolean;
+  warnings: string[];
+}
+
+
+GET /usage-metrics/current
+Description: Get current period usage metrics.
+Response: UsageMetricResponseDto[]
+
+Admin (Admin Users Only)
+GET /admin/metrics/global
+Description: Get global platform metrics.
+Response: GlobalMetricsSummaryDto
+{
+  totalCompanies: number;
+  activeCompanies: number;
+  suspendedCompanies: number;
+  totalUsers: number;
+  activeUsers: number;
+  totalLeads: number;
+  totalWorkflows: number;
+  totalAiInteractions: number;
+  totalEmails: number;
+  totalEnrichments: number;
+  totalBookings: number;
+  totalCampaigns: number;
+  averageLeadsPerCompany: number;
+  averageWorkflowsPerCompany: number;
+  topPerformingCompanies: Array<{
+    companyId: string;
+    companyName: string;
+    leadsCreated: number;
+    workflowsExecuted: number;
+  }>;
+  recentActivity: Array<{
+    companyId: string;
+    companyName: string;
+    action: string;
+    timestamp: Date;
+  }>;
+}
+
+
+GET /admin/health/platform
+Description: Get platform health status.
+Response: PlatformHealthDto
+{
+  status: 'healthy' | 'warning' | 'critical';
+  databaseStatus: 'connected' | 'disconnected' | 'error';
+  activeConnections: number;
+  systemLoad: number;
+  memoryUsage: number;
+  diskUsage: number;
+  lastBackupAt?: Date;
+  uptime: number;
+  alerts: Array<{
+    level: 'info' | 'warning' | 'error';
+    message: string;
+    timestamp: Date;
+  }>;
+}
+
+
+GET /admin/analytics/usage
+Description: Get usage analytics.
+Query Parameters:
+{
+  period?: string;           // Optional, time period
+}
+
+Response: UsageAnalyticsDto
+{
+  period: string;
+  totalUsage: {
+    leads: number;
+    workflows: number;
+    aiInteractions: number;
+    emails: number;
+    enrichments: number;
+  };
+  usageByCompany: Array<{
+    companyId: string;
+    companyName: string;
+    leads: number;
+    workflows: number;
+    aiInteractions: number;
+    emails: number;
+    enrichments: number;
+    planLimit: {
+      leads: number;
+      workflows: number;
+    };
+    usagePercentage: {
+      leads: number;
+      workflows: number;
+    };
+  }>;
+  trends: {
+    leadsGrowth: number;
+    workflowsGrowth: number;
+    aiInteractionsGrowth: number;
+    emailsGrowth: number;
+    enrichmentsGrowth: number;
+  };
+}
+
+
+N8N Integration (Internal)
+POST /n8n/webhook/workflow-completion
+Description: Webhook for workflow completion notifications.
+Request Payload:
+{
+  workflowId: string;
+  leadId: string;
+  companyId: string;
+  status: WorkflowCompletionStatus; // 'SUCCESS' | 'FAILED' | 'TIMEOUT'
+  outputData?: Record<string, any>;
+  errorMessage?: string;
+  workflowName?: string;
+}
+
+Response:
+{
+  message: string;           // Success message
+}
+
+
+POST /n8n/webhook/smartlead-reply
+Description: Webhook for Smartlead reply notifications.
+Request Payload:
+{
+  leadId: string;
+  emailId: string;
+  content: string;
+  companyId: string;
+  replyId?: string;
+}
+
+Response:
+{
+  message: string;           // Success message
+}
+
+
+Important Implementation Notes
+Authentication
+All endpoints except auth endpoints require JWT authentication
+JWT tokens expire in 15 minutes, refresh tokens in 7 days
+Sessions are tracked with IP and User-Agent for security
+Password reset invalidates all user sessions
+Pagination
+All list endpoints use cursor-based pagination
+Default page size is 20, maximum is 100
+nextCursor is null when no more results
+Cursor is the ID of the last item in the current page
+Business Logic
+Campaign status transitions follow strict rules
+Lead scoring is calculated automatically
+Reply classification and sentiment analysis are computed
+Workflow executions have timeout limits (5 minutes)
+Usage metrics track plan limits and overages
+Data Validation
+Email addresses must be valid format
+CUID format validation for IDs where specified
+String length limits are enforced
+Enum values must match defined constants
+Error Handling
+400: Bad Request (validation errors)
+401: Unauthorized (invalid/missing JWT)
+403: Forbidden (insufficient permissions)
+404: Not Found (resource doesn't exist)
+409: Conflict (business rule violation)
+500: Internal Server Error
+Rate Limiting
+API endpoints may have rate limiting applied
+Webhook endpoints have specific rate limits
+Authentication endpoints have stricter limits
+Webhooks
+N8N integration uses webhooks for async communication
+Webhook payloads include company context for security
+Failed webhooks are retried with exponential backoff
+This documentation provides the complete API reference for frontend development. All endpoints follow RESTful conventions and include proper validation, error handling, and business logic enforcement.
+

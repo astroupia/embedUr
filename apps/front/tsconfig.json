@@ -15,11 +15,7 @@
     "jsx": "preserve",
     "incremental": true,
     "plugins": [
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> 92de73e (chore: remove unused cookie file and update TypeScript configuration; modify analytics and campaigns pages to reflect new metrics and remove revenue display; enhance sidebar with new navigation links)
       {
         "name": "next"
       }

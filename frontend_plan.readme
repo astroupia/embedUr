@@ -1,0 +1,884 @@
+EmbedUr Backend System Architecture
+System Overview
+EmbedUr is a cold email outreach platform that enables businesses to create, manage, and execute targeted email campaigns at scale. The system automates the entire outreach process from lead management to email delivery and response handling.
+Core Purpose & Value Proposition
+The platform solves the challenge of scalable, personalized cold email outreach by providing:
+Lead Management: Import, enrich, and segment contact lists
+Campaign Orchestration: Create multi-step email sequences with automation
+Workflow Automation: Build complex business logic for lead qualification
+Response Handling: Process and classify incoming replies automatically
+Analytics & Optimization: Track performance and optimize campaigns
+
+Main Modules & Their Functions
+1. Authentication Module (AuthModule)
+Purpose: Manages user authentication, company registration, and session handling.
+Key Functions:
+User registration and login with JWT tokens
+Company creation with multi-tenant architecture
+Role-based access control (Admin, Member, Read-Only)
+Password reset and email verification
+Session management and token refresh
+Data Flow:
+User registers → Company created → Admin role assigned → JWT issued
+Login → JWT validation → Session created → Role-based access granted
+2. Campaigns Module (CampaignsModule)
+Purpose: Manages email campaign lifecycle from creation to execution.
+Key Functions:
+Campaign creation with targeting criteria
+Campaign activation/deactivation
+Lead assignment to campaigns
+Campaign performance tracking
+A/B testing and optimization
+Data Flow:
+Campaign created → Leads assigned → Workflows triggered → Emails sent → Responses tracked
+3. Leads Module (LeadsModule)
+Purpose: Handles lead data management, enrichment, and segmentation.
+Key Functions:
+Bulk lead import (CSV/Excel)
+Lead data validation and deduplication
+Lead enrichment with external data sources
+Lead segmentation and filtering
+Lead status tracking and lifecycle management
+Data Flow:
+Leads imported → Validation → Enrichment → Segmentation → Campaign assignment
+4. Workflows Module (WorkflowsModule)
+Purpose: Orchestrates complex business logic and automation sequences.
+Key Functions:
+Visual workflow builder for business logic
+Step execution and conditional branching
+Integration with external services (N8N, webhooks)
+Workflow monitoring and error handling
+Target audience translation and personalization
+Data Flow:
+Workflow triggered → Steps executed → External calls made → Results processed → Next steps determined
+5. Enrichment Module (EnrichmentModule)
+Purpose: Enhances lead data with external information sources.
+Key Functions:
+Data enrichment from multiple providers (Apollo, etc.)
+Enrichment request queuing and processing
+Result storage and data quality validation
+Provider management and fallback handling
+Data Flow:
+Enrichment requested → Provider selected → Data fetched → Results stored → Lead updated
+6. Analytics Module (UsageMetricsModule)
+Purpose: Tracks system usage, performance metrics, and business intelligence.
+Key Functions:
+Campaign performance analytics
+Lead conversion tracking
+Workflow efficiency metrics
+Usage-based billing and limits
+Real-time dashboard data
+Data Flow:
+Events logged → Metrics calculated → Reports generated → Dashboard updated
+7. N8N Integration Module (N8nModule)
+Purpose: Handles external automation platform integration and webhook processing.
+Key Functions:
+Webhook event processing from N8N
+Reply classification and handling
+Smartlead integration for email management
+External service communication
+Error handling and retry logic
+Data Flow:
+Webhook received → Event logged → Business logic executed → Response sent → Database updated
+
+Module Communication & Data Flow
+Primary Data Flow: Lead → Campaign → Workflow → Email
+1. Lead Import (LeadsModule)
+   ↓
+2. Lead Enrichment (EnrichmentModule)
+   ↓
+3. Campaign Assignment (CampaignsModule)
+   ↓
+4. Workflow Execution (WorkflowsModule)
+   ↓
+5. Email Delivery (External Provider)
+   ↓
+6. Response Processing (N8N Module)
+   ↓
+7. Analytics Tracking (UsageMetricsModule)
+
+Cross-Module Dependencies
+CampaignsModule depends on LeadsModule for lead assignment
+WorkflowsModule depends on CampaignsModule for campaign data
+N8N Module depends on LeadsModule and WorkflowsModule for reply processing
+Analytics Module consumes events from all other modules
+AuthModule provides authentication context to all modules
+
+Architecture Components
+Controllers
+Handle HTTP requests, validate input, and coordinate between services and repositories.
+Example Flow:
+HTTP Request → Controller → DTO Validation → Service Call → Repository → Database
+
+Services
+Contain business logic, orchestrate operations, and manage cross-module communication.
+Key Responsibilities:
+Business rule enforcement
+Data transformation and validation
+External service integration
+Event publishing and handling
+Error handling and logging
+Repositories
+Handle data access and persistence, following the repository pattern for clean separation.
+Responsibilities:
+Database queries and transactions
+Data mapping and transformation
+Caching and optimization
+Connection management
+DTOs (Data Transfer Objects)
+Define the structure of data moving between layers and validate input/output.
+Types:
+Input DTOs: Validate incoming requests
+Response DTOs: Structure API responses
+Query DTOs: Handle pagination and filtering
+Providers
+External service integrations and configuration management.
+Examples:
+Email service providers
+Enrichment data providers
+Queue systems
+External APIs
+
+Authentication & Authorization
+Multi-Tenant Architecture
+Each company operates in isolation with its own database schema and data.
+JWT-Based Authentication
+Access Tokens: Short-lived (15-60 minutes) for API access
+Refresh Tokens: Long-lived for token renewal
+Token Storage: Secure HTTP-only cookies
+Role-Based Access Control
+Admin: Full system access, user management, billing
+Member: Campaign and lead management, limited settings
+Read-Only: View-only access to assigned campaigns
+API Key Authentication
+Webhook Authentication: API keys for external service integration
+Service-to-Service: Internal communication between modules
+
+External Integrations
+Email Service Providers
+Smartlead: Primary email delivery and reply handling
+Webhook Integration: Real-time reply processing
+Email Templates: Dynamic content generation
+Data Enrichment Providers
+Apollo: Company and contact data enrichment
+Provider Abstraction: Pluggable architecture for multiple providers
+Fallback Handling: Multiple providers for reliability
+Automation Platform (N8N)
+Workflow Orchestration: Complex business logic automation
+Webhook Processing: Reply classification and handling
+External Service Integration: CRM, email, and data services
+Queue Systems
+Background Processing: Email sending, enrichment, analytics
+Event Handling: Asynchronous processing of system events
+Retry Logic: Failed operation recovery
+
+Request-Response Cycle
+Typical API Request Flow
+1. Frontend Request → Next.js API Route
+2. API Route → NestJS Controller
+3. Controller → DTO Validation
+4. Controller → Service Method
+5. Service → Repository Query
+6. Repository → Database Operation
+7. Database → Repository → Service
+8. Service → Controller → Response
+9. Response → Frontend
+
+Webhook Processing Flow
+1. External Service → N8N Webhook
+2. N8N → NestJS Webhook Endpoint
+3. Webhook → Event Logging
+4. Webhook → Business Logic Processing
+5. Processing → Database Update
+6. Processing → Event Publishing
+7. Event → Analytics Update
+8. Response → N8N
+
+
+Shared Resources & Infrastructure
+Guards
+JWT Auth Guard: Protects authenticated routes
+Roles Guard: Enforces role-based access
+API Key Guard: Validates webhook requests
+Interceptors
+Logging Interceptor: Request/response logging
+Transform Interceptor: Response data transformation
+Error Interceptor: Global error handling
+Middleware
+CORS: Cross-origin request handling
+Rate Limiting: API abuse prevention
+Request Validation: Input sanitization
+Database Layer
+Prisma ORM: Type-safe database operations
+Multi-Tenant: Schema-per-company isolation
+Migrations: Version-controlled schema changes
+Event System
+Event Publishing: Cross-module communication
+Event Handlers: Asynchronous processing
+Event Logging: Audit trail and debugging
+
+System Strengths
+Clean Architecture: Clear separation of concerns with repository pattern
+Scalability: Multi-tenant design supports multiple companies
+Extensibility: Pluggable providers and modular design
+Reliability: Comprehensive error handling and retry mechanisms
+Security: Role-based access and secure authentication
+Observability: Extensive logging and analytics tracking
+
+
+
+
+1. AuthModule
+Purpose:Handles authentication, registration, password management, and JWT/session management.Public Endpoints:
+POST /auth/register — Register a new user
+POST /auth/login — Login and receive JWT
+POST /auth/refresh — Refresh JWT
+POST /auth/logout — Logout (JWT required)
+GET /auth/verify — Email verification (query param: token)
+POST /auth/password/forgot — Request password reset
+POST /auth/password/reset — Reset password
+Connections:
+Used by all modules for authentication/authorization.
+Exports guards (JwtAuthGuard, ApiKeyGuard) for use in other modules.
+Shared Providers/Guards:
+JwtAuthGuard, ApiKeyGuard (used globally)
+MailService for sending emails
+
+2. LeadsModule
+Purpose:Manages lead creation, retrieval, updating, deletion, and enrichment.Public Endpoints:
+POST /leads — Create lead
+GET /leads — List leads (pagination)
+GET /leads/stats — Lead statistics
+GET /leads/status/:status — Leads by status
+GET /leads/:id — Get lead by ID
+PATCH /leads/:id — Update lead
+DELETE /leads/:id — Delete lead
+POST /leads/:id/enrich — Manually trigger enrichment
+Connections:
+Uses WorkflowsModule for workflow execution on leads.
+Uses CampaignsModule for campaign-lead relationships.
+Uses UsageMetricsModule for tracking.
+Shared Providers/Guards:
+JwtAuthGuard (all endpoints protected)
+CurrentUser decorator
+
+3. CampaignsModule
+Purpose:Manages marketing campaigns, their lifecycle, and campaign-lead associations.Public Endpoints:
+POST /campaigns — Create campaign
+GET /campaigns — List campaigns (pagination)
+GET /campaigns/stats — Campaign statistics
+GET /campaigns/status/:status — Campaigns by status
+GET /campaigns/:id — Get campaign by ID
+PATCH /campaigns/:id — Update campaign
+POST /campaigns/:id/activate — Activate campaign
+POST /campaigns/:id/pause — Pause campaign
+POST /campaigns/:id/complete — Complete campaign
+POST /campaigns/:id/archive — Archive campaign
+DELETE /campaigns/:id — Delete campaign
+Connections:
+Uses LeadsModule for campaign-lead operations.
+Uses WorkflowsModule for campaign workflows.
+Uses AIPersonaModule for AI persona integration.
+Shared Providers/Guards:
+JwtAuthGuard (all endpoints protected)
+CurrentUser decorator
+
+4. WorkflowsModule
+Purpose:Handles workflow definitions, execution, orchestration, progress tracking, analytics, and audit trails.Public Endpoints:
+POST /workflows — Create workflow
+GET /workflows — List workflows (pagination)
+GET /workflows/stats — Workflow statistics
+GET /workflows/type/:type — Workflows by type
+GET /workflows/:id — Get workflow by ID
+PATCH /workflows/:id — Update workflow
+DELETE /workflows/:id — Delete workflow
+POST /workflows/:id/execute — Execute workflow
+GET /workflows/executions — List executions (pagination)
+GET /workflows/executions/:executionId — Get execution by ID
+POST /workflows/executions/:executionId/retry — Retry execution
+Connections:
+Used by LeadsModule, CampaignsModule, N8nModule for workflow execution.
+Exports services for orchestration, progress, error handling, analytics.
+Shared Providers/Guards:
+JwtAuthGuard (all endpoints protected)
+CurrentUser decorator
+
+5. N8nModule
+Purpose:Handles inbound webhooks from n8n (automation engine), including workflow completions, smartlead replies, and enrichment completions.Public Endpoints:
+POST /n8n/smartlead-reply — Handle Smartlead reply webhook
+POST /n8n/reply-handling-completion — Handle reply completion webhook
+POST /n8n/complete — Handle workflow completion
+POST /n8n/enrichment/complete — Handle enrichment completion
+POST /n8n/log — Handle workflow log entries
+GET /n8n/webhooks — List webhook events
+GET /n8n/webhooks/:source — List webhook events by source
+GET /n8n/notifications — List notifications
+Connections:
+Uses LeadsModule, WorkflowsModule, RepliesModule for business logic.
+Exports services for use in other modules.
+Shared Providers/Guards:
+ApiKeyGuard (webhook endpoints)
+Logging and error handling
+
+6. EnrichmentModule
+Purpose:Handles lead enrichment (e.g., via Apollo, Clearbit), enrichment requests, and enrichment completion.Public Endpoints:(Assumed, based on standard enrichment modules)
+POST /enrichment/trigger — Trigger enrichment for a lead
+GET /enrichment/:id — Get enrichment request by ID
+Connections:
+Used by LeadsModule and N8nModule for enrichment flows.
+Shared Providers/Guards:
+JwtAuthGuard (protected endpoints)
+
+7. RepliesModule
+Purpose:Handles replies to outbound emails, reply classification, and booking creation from replies.Public Endpoints:(Assumed, based on standard reply modules)
+POST /replies — Create reply (from webhook)
+GET /replies/:id — Get reply by ID
+Connections:
+Used by N8nModule for reply webhooks.
+Used by LeadsModule for reply tracking.
+Shared Providers/Guards:
+ApiKeyGuard (webhook endpoints)
+JwtAuthGuard (protected endpoints)
+
+8. AIPersonaModule
+Purpose:Manages AI personas for campaigns and workflows.Public Endpoints:(Assumed, based on standard AI persona modules)
+GET /ai-persona — List AI personas
+Connections:
+Used by CampaignsModule and WorkflowsModule for AI-driven flows.
+
+9. UsageMetricsModule
+Purpose:Tracks usage metrics for leads, campaigns, workflows, and webhooks.Public Endpoints:
+GET /usage-metrics — List usage metrics
+Connections:
+Used by all modules for tracking and analytics.
+
+10. AdminModule
+Purpose:Handles admin-only endpoints for system management, user management, and audit logs.Public Endpoints:(Assumed, based on standard admin modules)
+GET /admin/users — List users
+GET /admin/audit-logs — List audit logs
+Connections:
+Used by all modules for admin operations.
+
+Shared Providers, Guards, Interceptors, Middlewares
+Guards: JwtAuthGuard, ApiKeyGuard (used across modules)
+Decorators: CurrentUser (injects user info from JWT)
+Interceptors/Middleware: Logging, error handling, and DTO validation are applied globally or per-controller.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Frontend Architecture Plan
+1. Complete Folder Structure
+apps/frontend/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/                    # Auth route group
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx           # Login form
+│   │   │   ├── register/
+│   │   │   │   └── page.tsx           # Registration form
+│   │   │   ├── forgot-password/
+│   │   │   │   └── page.tsx           # Password reset request
+│   │   │   ├── reset-password/
+│   │   │   │   └── page.tsx           # Password reset form
+│   │   │   ├── verify-email/
+│   │   │   │   └── page.tsx           # Email verification
+│   │   │   └── layout.tsx             # Auth layout (no sidebar)
+│   │   │
+│   │   ├── (marketing)/               # Marketing route group
+│   │   │   ├── page.tsx               # Landing page
+│   │   │   ├── pricing/
+│   │   │   │   └── page.tsx           # Pricing page
+│   │   │   ├── about/
+│   │   │   │   └── page.tsx           # About page
+│   │   │   └── layout.tsx             # Marketing layout
+│   │   │
+│   │   ├── (dashboard)/               # Dashboard route group
+│   │   │   ├── dashboard/
+│   │   │   │   ├── page.tsx           # Dashboard overview
+│   │   │   │   ├── layout.tsx         # Dashboard layout with sidebar
+│   │   │   │   └── loading.tsx        # Loading state
+│   │   │   │
+│   │   │   ├── campaigns/
+│   │   │   │   ├── page.tsx           # Campaigns list
+│   │   │   │   ├── [id]/
+│   │   │   │   │   ├── page.tsx       # Campaign details
+│   │   │   │   │   ├── edit/
+│   │   │   │   │   │   └── page.tsx   # Edit campaign
+│   │   │   │   │   ├── analytics/
+│   │   │   │   │   │   └── page.tsx   # Campaign analytics
+│   │   │   │   │   └── leads/
+│   │   │   │   │       └── page.tsx   # Campaign leads
+│   │   │   │   ├── create/
+│   │   │   │   │   └── page.tsx       # Create new campaign
+│   │   │   │   └── loading.tsx
+│   │   │   │
+│   │   │   ├── leads/
+│   │   │   │   ├── page.tsx           # Leads list
+│   │   │   │   ├── [id]/
+│   │   │   │   │   ├── page.tsx       # Lead details
+│   │   │   │   │   ├── edit/
+│   │   │   │   │   │   └── page.tsx   # Edit lead
+│   │   │   │   │   └── replies/
+│   │   │   │   │       └── page.tsx   # Lead replies
+│   │   │   │   ├── upload/
+│   │   │   │   │   └── page.tsx       # Bulk lead upload
+│   │   │   │   ├── import/
+│   │   │   │   │   └── page.tsx       # Import from CSV/Excel
+│   │   │   │   └── loading.tsx
+│   │   │   │
+│   │   │   ├── workflows/
+│   │   │   │   ├── page.tsx           # Workflows list
+│   │   │   │   ├── [id]/
+│   │   │   │   │   ├── page.tsx       # Workflow details
+│   │   │   │   │   ├── edit/
+│   │   │   │   │   │   └── page.tsx   # Edit workflow
+│   │   │   │   │   ├── executions/
+│   │   │   │   │   │   └── page.tsx   # Workflow executions
+│   │   │   │   │   └── analytics/
+│   │   │   │   │       └── page.tsx   # Workflow analytics
+│   │   │   │   ├── create/
+│   │   │   │   │   └── page.tsx       # Create workflow
+│   │   │   │   └── loading.tsx
+│   │   │   │
+│   │   │   ├── enrichment/
+│   │   │   │   ├── page.tsx           # Enrichment requests
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── page.tsx       # Enrichment details
+│   │   │   │   └── loading.tsx
+│   │   │   │
+│   │   │   ├── analytics/
+│   │   │   │   ├── page.tsx           # Analytics dashboard
+│   │   │   │   ├── campaigns/
+│   │   │   │   │   └── page.tsx       # Campaign analytics
+│   │   │   │   ├── leads/
+│   │   │   │   │   └── page.tsx       # Lead analytics
+│   │   │   │   ├── workflows/
+│   │   │   │   │   └── page.tsx       # Workflow analytics
+│   │   │   │   └── usage/
+│   │   │   │       └── page.tsx       # Usage metrics
+│   │   │   │
+│   │   │   ├── settings/
+│   │   │   │   ├── page.tsx           # Settings overview
+│   │   │   │   ├── profile/
+│   │   │   │   │   └── page.tsx       # User profile
+│   │   │   │   ├── company/
+│   │   │   │   │   └── page.tsx       # Company settings
+│   │   │   │   ├── team/
+│   │   │   │   │   └── page.tsx       # Team management
+│   │   │   │   ├── integrations/
+│   │   │   │   │   └── page.tsx       # API keys, webhooks
+│   │   │   │   └── billing/
+│   │   │   │       └── page.tsx       # Billing & subscription
+│   │   │   │
+│   │   │   └── admin/                 # Admin-only routes
+│   │   │       ├── page.tsx           # Admin dashboard
+│   │   │       ├── companies/
+│   │   │       │   └── page.tsx       # Company management
+│   │   │       ├── users/
+│   │   │       │   └── page.tsx       # User management
+│   │   │       └── metrics/
+│   │   │           └── page.tsx       # Global metrics
+│   │   │
+│   │   ├── api/                       # API routes (if needed)
+│   │   │   └── webhooks/
+│   │   │       └── n8n/
+│   │   │           └── route.ts       # N8N webhook handler
+│   │   │
+│   │   ├── globals.css
+│   │   ├── layout.tsx                 # Root layout
+│   │   └── page.tsx                   # Root page (redirect)
+│   │
+│   ├── components/
+│   │   ├── ui/                        # Base UI components
+│   │   │   ├── button.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── modal.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── progress.tsx
+│   │   │   ├── chart.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── forms/                     # Form components
+│   │   │   ├── campaign-form.tsx
+│   │   │   ├── lead-form.tsx
+│   │   │   ├── workflow-form.tsx
+│   │   │   ├── enrichment-form.tsx
+│   │   │   ├── company-form.tsx
+│   │   │   ├── user-form.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── dashboard/                 # Dashboard-specific components
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── header.tsx
+│   │   │   ├── stats-card.tsx
+│   │   │   ├── recent-activity.tsx
+│   │   │   ├── quick-actions.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── campaigns/                 # Campaign components
+│   │   │   ├── campaign-card.tsx
+│   │   │   ├── campaign-status.tsx
+│   │   │   ├── campaign-metrics.tsx
+│   │   │   ├── campaign-filters.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── leads/                     # Lead components
+│   │   │   ├── lead-card.tsx
+│   │   │   ├── lead-status.tsx
+│   │   │   ├── lead-filters.tsx
+│   │   │   ├── upload-progress.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── workflows/                 # Workflow components
+│   │   │   ├── workflow-card.tsx
+│   │   │   ├── workflow-builder.tsx
+│   │   │   ├── step-configurator.tsx
+│   │   │   ├── execution-status.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── analytics/                 # Analytics components
+│   │   │   ├── chart-container.tsx
+│   │   │   ├── metrics-grid.tsx
+│   │   │   ├── date-range-picker.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   └── shared/                    # Shared components
+│   │       ├── loading-spinner.tsx
+│   │       ├── error-boundary.tsx
+│   │       ├── empty-state.tsx
+│   │       ├── pagination.tsx
+│   │       └── index.ts
+│   │
+│   ├── lib/
+│   │   ├── api/                       # API client layer
+│   │   │   ├── client.ts              # Base API client
+│   │   │   ├── auth.ts                # Auth API calls
+│   │   │   ├── campaigns.ts           # Campaign API calls
+│   │   │   ├── leads.ts               # Lead API calls
+│   │   │   ├── workflows.ts           # Workflow API calls
+│   │   │   ├── enrichment.ts          # Enrichment API calls
+│   │   │   ├── analytics.ts           # Analytics API calls
+│   │   │   ├── admin.ts               # Admin API calls
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── hooks/                     # Custom hooks
+│   │   │   ├── useAuth.ts             # Authentication hook
+│   │   │   ├── useCampaigns.ts        # Campaign data hook
+│   │   │   ├── useLeads.ts            # Lead data hook
+│   │   │   ├── useWorkflows.ts        # Workflow data hook
+│   │   │   ├── useEnrichment.ts       # Enrichment data hook
+│   │   │   ├── useAnalytics.ts        # Analytics data hook
+│   │   │   ├── useApi.ts              # Generic API hook
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── store/                     # State management
+│   │   │   ├── auth-store.ts          # Auth state (Zustand)
+│   │   │   ├── ui-store.ts            # UI state (Zustand)
+│   │   │   ├── campaign-store.ts      # Campaign state (Zustand)
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── utils/                     # Utility functions
+│   │   │   ├── auth.ts                # Auth utilities
+│   │   │   ├── validation.ts          # Form validation
+│   │   │   ├── formatting.ts          # Data formatting
+│   │   │   ├── constants.ts           # App constants
+│   │   │   └── index.ts
+│   │   │
+│   │   └── types/                     # TypeScript types
+│   │       ├── auth.ts                # Auth types
+│   │       ├── campaign.ts            # Campaign types
+│   │       ├── lead.ts                # Lead types
+│   │       ├── workflow.ts            # Workflow types
+│   │       ├── api.ts                 # API response types
+│   │       └── index.ts
+│   │
+│   └── styles/                        # Additional styles
+│       ├── components.css
+│       └── animations.css
+│
+├── public/
+│   ├── images/
+│   ├── icons/
+│   └── favicon.ico
+│
+├── package.json
+├── next.config.js
+├── tailwind.config.js
+├── tsconfig.json
+└── .env.local
+
+
+2. Route Structure & Page Descriptions
+Authentication Routes (/auth/*)
+/auth/login - Clean login form with email/password, "Remember me" checkbox, and links to register/forgot password
+/auth/register - Multi-step registration form: company details → user details → verification
+/auth/forgot-password - Simple form to request password reset email
+/auth/reset-password - Password reset form with token validation
+/auth/verify-email - Email verification page with success/error states
+Marketing Routes (/)
+/ - Hero landing page with features, pricing, and CTA buttons
+/pricing - Pricing tiers with feature comparison table
+/about - Company information and team details
+Dashboard Routes (/dashboard/*)
+/dashboard - Overview dashboard with key metrics, recent activity, and quick actions
+
+
+/dashboard/campaigns - Campaign list with filters, search, and bulk actions
+
+
+/dashboard/campaigns/create - Multi-step campaign creation wizard
+
+
+/dashboard/campaigns/[id] - Campaign details with tabs for overview, analytics, leads, and settings
+
+
+/dashboard/campaigns/[id]/edit - Campaign editing form
+
+
+/dashboard/campaigns/[id]/analytics - Campaign-specific analytics with charts
+
+
+/dashboard/campaigns/[id]/leads - Campaign leads list with filtering
+
+
+/dashboard/leads - Lead management with list view, filters, and bulk actions
+
+
+/dashboard/leads/upload - Drag-and-drop file upload with CSV/Excel validation
+
+
+/dashboard/leads/import - Import wizard with field mapping
+
+
+/dashboard/leads/[id] - Lead details with contact info, activity history, and replies
+
+
+/dashboard/leads/[id]/edit - Lead editing form
+
+
+/dashboard/leads/[id]/replies - Lead conversation history
+
+
+/dashboard/workflows - Workflow list with status indicators and execution history
+
+
+/dashboard/workflows/create - Visual workflow builder with drag-and-drop
+
+
+/dashboard/workflows/[id] - Workflow details with step configuration
+
+
+/dashboard/workflows/[id]/edit - Workflow editing interface
+
+
+/dashboard/workflows/[id]/executions - Workflow execution history and logs
+
+
+/dashboard/workflows/[id]/analytics - Workflow performance analytics
+
+
+/dashboard/enrichment - Enrichment requests list with status tracking
+
+
+/dashboard/enrichment/[id] - Enrichment details with progress indicators
+
+
+/dashboard/analytics - Main analytics dashboard with overview metrics
+
+
+/dashboard/analytics/campaigns - Campaign performance analytics
+
+
+/dashboard/analytics/leads - Lead conversion analytics
+
+
+/dashboard/analytics/workflows - Workflow efficiency analytics
+
+
+/dashboard/analytics/usage - Usage metrics and billing information
+
+
+/dashboard/settings - Settings overview with navigation to sub-sections
+
+
+/dashboard/settings/profile - User profile management
+
+
+/dashboard/settings/company - Company information and branding
+
+
+/dashboard/settings/team - Team member management and permissions
+
+
+/dashboard/settings/integrations - API keys, webhooks, and third-party integrations
+
+
+/dashboard/settings/billing - Subscription management and billing history
+
+
+/dashboard/admin - Admin-only dashboard (role-based access)
+
+
+/dashboard/admin/companies - Company management interface
+
+
+/dashboard/admin/users - User management across all companies
+
+
+/dashboard/admin/metrics - Global system metrics and monitoring
+
+
+
+3. Component Library Structure
+Base UI Components (components/ui/)
+Button variants: Primary, secondary, outline, ghost, destructive
+Form components: Input, textarea, select, checkbox, radio, date picker
+Layout components: Card, container, grid, flex, divider
+Navigation: Breadcrumb, pagination, tabs, sidebar
+Feedback: Alert, toast, modal, tooltip, progress bar
+Data display: Table, list, badge, avatar, status indicator
+Charts: Line, bar, pie, area charts using Recharts or Chart.js
+Form Components (components/forms/)
+CampaignForm: Multi-step form with validation for campaign creation/editing
+LeadForm: Contact information form with validation
+WorkflowForm: Visual workflow builder with step configuration
+EnrichmentForm: Enrichment request form with provider selection
+CompanyForm: Company details and branding form
+UserForm: User profile and permissions form
+Feature-Specific Components
+Campaign components: Campaign cards, status indicators, metrics displays
+Lead components: Lead cards, upload progress, filtering interfaces
+Workflow components: Workflow builder, step configurators, execution status
+Analytics components: Chart containers, metrics grids, date range pickers
+
+4. API Layer Structure (lib/api/)
+Base API Client (client.ts)
+// Handles authentication, error handling, and request/response interceptors
+class ApiClient {
+  private baseURL: string;
+  private token: string | null;
+  
+  // Request interceptor for adding auth headers
+  // Response interceptor for error handling
+  // Retry logic for failed requests
+}
+
+Feature-Specific API Modules
+auth.ts - Login, register, password reset, token refresh
+campaigns.ts - CRUD operations, activation/deactivation, analytics
+leads.ts - Lead management, bulk upload, enrichment
+workflows.ts - Workflow CRUD, execution, monitoring
+enrichment.ts - Enrichment requests, status tracking
+analytics.ts - Metrics, reports, usage data
+admin.ts - Admin operations (company/user management)
+
+5. Custom Hooks (lib/hooks/)
+Authentication Hook (useAuth.ts)
+// Manages authentication state, token storage, and user session
+const useAuth = () => {
+  // Login/logout functions
+  // Token management
+  // User session data
+  // Role-based access control
+}
+
+Data Hooks (e.g., useCampaigns.ts)
+// Provides data fetching, caching, and state management for each feature
+const useCampaigns = () => {
+  // Fetch campaigns with pagination
+  // Create/update/delete campaigns
+  // Real-time updates
+  // Error handling and loading states
+}
+
+Generic API Hook (useApi.ts)
+// Reusable hook for API calls with loading, error, and success states
+const useApi = (endpoint: string, options?: ApiOptions) => {
+  // Data fetching
+  // Loading states
+  // Error handling
+  // Caching
+}
+
+
+6. State Management (lib/store/)
+Zustand Stores
+auth-store.ts - Authentication state, user data, tokens
+ui-store.ts - UI state (sidebar, modals, theme, notifications)
+campaign-store.ts - Campaign data caching and real-time updates
+lead-store.ts - Lead data and filtering state
+workflow-store.ts - Workflow state and execution tracking
+Store Structure
+interface AuthStore {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => void;
+  refreshToken: () => Promise<void>;
+}
+
+
+7. Authentication & Security
+JWT Token Management
+Token storage: Secure HTTP-only cookies or localStorage with encryption
+Token refresh: Automatic refresh before expiration
+Token validation: Server-side validation on protected routes
+Logout: Clear tokens and redirect to login
+Role-Based Access Control
+Route protection: Middleware for role-based route access
+Component-level: Conditional rendering based on user roles
+API-level: Backend validation of user permissions
+Security Features
+CSRF protection: CSRF tokens for state-changing operations
+Input validation: Client-side and server-side validation
+Rate limiting: API rate limiting for sensitive endpoints
+Error handling: Secure error messages without sensitive data
+
+8. Key Page Descriptions
+Dashboard Overview (/dashboard)
+Hero section: Welcome message with user name and company
+Quick stats: Campaigns active, leads total, workflows running, enrichment pending
+Recent activity: Latest campaign updates, lead additions, workflow executions
+Quick actions: Create campaign, upload leads, build workflow
+Performance charts: Weekly/monthly metrics overview
+Campaign Management (/dashboard/campaigns)
+List view: Campaign cards with status, metrics, and actions
+Filters: Status, date range, performance metrics
+Search: Real-time search across campaign names and descriptions
+Bulk actions: Activate/deactivate multiple campaigns
+Create flow: Multi-step wizard with validation
+Lead Management (/dashboard/leads)
+Table view: Sortable columns with lead information
+Advanced filters: Status, source, date added, enrichment status
+Bulk operations: Export, delete, update status
+Upload interface: Drag-and-drop with progress tracking
+Import wizard: Field mapping and validation
+Workflow Builder (/dashboard/workflows/create)
+Visual editor: Drag-and-drop workflow builder
+Step library: Pre-built steps for common operations
+Configuration panels: Step-specific settings and validation
+Preview mode: Test workflow before saving
+Version control: Save drafts and publish versions
+Analytics Dashboard (/dashboard/analytics)
+Overview metrics: Key performance indicators
+Interactive charts: Campaign performance, lead conversion, workflow efficiency
+Date range picker: Custom time periods for analysis
+Export functionality: PDF/Excel report generation
+Real-time updates: Live data refresh
