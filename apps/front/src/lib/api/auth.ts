@@ -1,108 +1,89 @@
-// API client for authentication operations
+import { apiClient } from './client';
+import type {
+  RegisterRequest,
+  RegisterResponse,
+  LoginRequest,
+  LoginResponse,
+  RefreshTokenRequest,
+  LogoutRequest,
+} from './client';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  companyName: string;
-  firstName: string;
-  lastName: string;
-}
-
-export interface RegisterResponse {
-  message: string;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    companyId: string;
-  };
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    role: string;
-    companyId: string;
-  };
-}
-
-export interface ApiError {
-  message: string;
-  error?: string;
-  statusCode: number;
-}
-
-class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+// Auth API class that uses the base client
+export class AuthAPI {
+  private client = apiClient;
+  /**
+   * Register a new user and company
+   */
+  async register(data: RegisterRequest): Promise<RegisterResponse> {
+    return this.client.register(data);
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+  /**
+   * Login user
+   */
+  async login(data: LoginRequest): Promise<LoginResponse> {
+    const response = await this.client.login(data);
     
-    const defaultHeaders = {
-      'Content-Type': 'application/json',
-    };
-
-    const config: RequestInit = {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-    };
-
-    try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Handle the specific error format from your backend
-        const errorMessage = data.message || data.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      return data;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('An unexpected error occurred');
+    // Automatically set the access token after successful login
+    if (response.accessToken) {
+      this.client.setAccessToken(response.accessToken);
     }
+    
+    return response;
   }
 
-  async register(payload: RegisterRequest): Promise<RegisterResponse> {
-    return this.request<RegisterResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+  /**
+   * Refresh access token
+   */
+  async refreshToken(data: RefreshTokenRequest): Promise<LoginResponse> {
+    const response = await this.client.refreshToken(data);
+    
+    // Update the access token after refresh
+    if (response.accessToken) {
+      this.client.setAccessToken(response.accessToken);
+    }
+    
+    return response;
   }
 
-  async login(payload: LoginRequest): Promise<LoginResponse> {
-    return this.request<LoginResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+  /**
+   * Logout user
+   */
+  async logout(data: LogoutRequest): Promise<void> {
+    await this.client.logout(data);
+    
+    // Clear auth tokens after logout
+    this.client.clearAuth();
+  }
+
+  /**
+   * Verify email with token
+   */
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    return this.client.verifyEmail(token);
+  }
+
+  /**
+   * Request password reset
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return this.client.forgotPassword(email);
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(token: string, password: string): Promise<{ message: string }> {
+    return this.client.resetPassword(token, password);
   }
 }
 
-// Export a singleton instance
-export const authApi = new ApiClient(API_BASE_URL); 
+// Export types for convenience
+export type {
+  RegisterRequest,
+  RegisterResponse,
+  LoginRequest,
+  LoginResponse,
+  RefreshTokenRequest,
+  LogoutRequest,
+}; 
