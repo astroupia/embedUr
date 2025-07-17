@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { setCookie, deleteCookie, getAllCookies } from './cookies';
+import { apiClient } from './api';
 
 interface User {
   id: string;
@@ -18,6 +19,7 @@ interface AuthContextType {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean; // Add this new state
   login: (user: User, accessToken: string, refreshToken: string) => void;
   logout: () => void;
   updateUser: (user: User) => void;
@@ -30,40 +32,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false); // Add this state
 
   // Check for existing auth data on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedAccessToken = localStorage.getItem('accessToken');
-    const storedRefreshToken = localStorage.getItem('refreshToken');
+    const initializeAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      const storedAccessToken = localStorage.getItem('accessToken');
+      const storedRefreshToken = localStorage.getItem('refreshToken');
 
-    if (storedUser && storedAccessToken && storedRefreshToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setAccessToken(storedAccessToken);
-        setRefreshToken(storedRefreshToken);
-        
-        // Also set cookies if they don't exist
-        const cookies = getAllCookies();
-        
-        if (!cookies.accessToken) {
-          setCookie('accessToken', storedAccessToken, 7);
+      if (storedUser && storedAccessToken && storedRefreshToken) {
+        try {
+          setUser(JSON.parse(storedUser));
+          setAccessToken(storedAccessToken);
+          setRefreshToken(storedRefreshToken);
+          apiClient.setAccessToken(storedAccessToken); // <-- set token in API client
+          
+          // Also set cookies if they don't exist
+          const cookies = getAllCookies();
+          
+          if (!cookies.accessToken) {
+            setCookie('accessToken', storedAccessToken, 7);
+          }
+          if (!cookies.refreshToken) {
+            setCookie('refreshToken', storedRefreshToken, 7);
+          }
+        } catch (error) {
+          console.error('Error parsing stored auth data:', error);
+          logout();
         }
-        if (!cookies.refreshToken) {
-          setCookie('refreshToken', storedRefreshToken, 7);
-        }
-      } catch (error) {
-        console.error('Error parsing stored auth data:', error);
-        logout();
+      } else {
+        apiClient.clearAuth(); // clear token in API client if not logged in
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+      setIsInitialized(true); // Mark as initialized
+    };
+
+    initializeAuth();
   }, []);
 
   const login = (user: User, accessToken: string, refreshToken: string) => {
     setUser(user);
     setAccessToken(accessToken);
     setRefreshToken(refreshToken);
+    apiClient.setAccessToken(accessToken); // <-- set token in API client
     
     // Store in localStorage
     localStorage.setItem('user', JSON.stringify(user));
@@ -94,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setAccessToken(null);
     setRefreshToken(null);
+    apiClient.clearAuth(); // <-- clear token in API client
     
     // Clear localStorage
     localStorage.removeItem('user');
@@ -116,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshToken,
     isAuthenticated: !!user && !!accessToken,
     isLoading,
+    isInitialized, // Add this to the context value
     login,
     logout,
     updateUser,

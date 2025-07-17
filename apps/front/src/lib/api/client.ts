@@ -525,6 +525,97 @@ export interface GlobalMetricsSummary {
   totalEnrichments: number;
 }
 
+// Target Audience Translator types
+export enum InputFormat {
+  FREE_TEXT = 'FREE_TEXT',
+  STRUCTURED_JSON = 'STRUCTURED_JSON',
+  CSV_UPLOAD = 'CSV_UPLOAD',
+  FORM_INPUT = 'FORM_INPUT',
+}
+
+export interface EnrichmentField {
+  name: string;
+  type: 'REQUIRED' | 'OPTIONAL' | 'CONDITIONAL';
+  description: string;
+}
+
+export interface EnrichmentSchema {
+  requiredFields: EnrichmentField[];
+  optionalFields: EnrichmentField[];
+  conditionalFields?: EnrichmentField[];
+}
+
+export interface GeneratedLead {
+  fullName?: string;
+  jobTitle?: string;
+  companyName?: string;
+  location?: string;
+  linkedinUrl?: string;
+  email?: string;
+  additionalData?: Record<string, any>;
+}
+
+export interface InterpretedCriteria {
+  jobTitles?: string[];
+  industries?: string[];
+  location?: string;
+  companySize?: string;
+  fundingStatus?: string;
+  [key: string]: any;
+}
+
+export interface StructuredTargetingData {
+  jobTitles?: string[];
+  industries?: string[];
+  location?: string;
+  companySize?: string;
+  fundingStatus?: string;
+  [key: string]: any;
+}
+
+export interface TargetAudienceTranslator {
+  id: string;
+  inputFormat: InputFormat;
+  targetAudienceData: string;
+  structuredData?: StructuredTargetingData | null;
+  config?: Record<string, any> | null;
+  leads?: GeneratedLead[] | null;
+  enrichmentSchema?: EnrichmentSchema | null;
+  interpretedCriteria?: InterpretedCriteria | null;
+  reasoning?: string | null;
+  confidence?: number | null;
+  status: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED';
+  errorMessage?: string | null;
+  companyId: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateTargetAudienceTranslatorRequest {
+  inputFormat: InputFormat;
+  targetAudienceData: string;
+  structuredData?: StructuredTargetingData;
+  config?: Record<string, any>;
+}
+
+export interface QueryTargetAudienceTranslatorRequest {
+  cursor?: string;
+  take?: number;
+  search?: string;
+  status?: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED';
+  inputFormat?: InputFormat;
+}
+
+export interface TargetAudienceTranslatorStats {
+  total: number;
+  byStatus: Record<string, number>;
+  byInputFormat: Record<string, number>;
+  successful: number;
+  failed: number;
+  pending: number;
+}
+
 // Main API Client Class
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -1038,6 +1129,58 @@ class ApiClient {
     });
   }
 
+  // Target Audience Translator methods
+  async createTargetAudienceTranslator(data: CreateTargetAudienceTranslatorRequest): Promise<TargetAudienceTranslator> {
+    return this.request<TargetAudienceTranslator>({
+      method: 'POST',
+      url: '/target-audience-translator',
+      data,
+    });
+  }
+
+  async getTargetAudienceTranslators(params?: QueryTargetAudienceTranslatorRequest): Promise<PaginatedResponse<TargetAudienceTranslator>> {
+    return this.request<PaginatedResponse<TargetAudienceTranslator>>({
+      method: 'GET',
+      url: '/target-audience-translator',
+      params,
+    });
+  }
+
+  async getTargetAudienceTranslator(id: string): Promise<TargetAudienceTranslator> {
+    return this.request<TargetAudienceTranslator>({
+      method: 'GET',
+      url: `/target-audience-translator/${id}`,
+    });
+  }
+
+  async getTargetAudienceTranslatorStats(): Promise<TargetAudienceTranslatorStats> {
+    return this.request<TargetAudienceTranslatorStats>({
+      method: 'GET',
+      url: '/target-audience-translator/stats',
+    });
+  }
+
+  async getTargetAudienceTranslatorsByStatus(status: string): Promise<TargetAudienceTranslator[]> {
+    return this.request<TargetAudienceTranslator[]>({
+      method: 'GET',
+      url: `/target-audience-translator/status/${status}`,
+    });
+  }
+
+  async getTargetAudienceTranslatorsByFormat(format: InputFormat): Promise<TargetAudienceTranslator[]> {
+    return this.request<TargetAudienceTranslator[]>({
+      method: 'GET',
+      url: `/target-audience-translator/format/${format}`,
+    });
+  }
+
+  async retryTargetAudienceTranslator(id: string): Promise<TargetAudienceTranslator> {
+    return this.request<TargetAudienceTranslator>({
+      method: 'POST',
+      url: `/target-audience-translator/${id}/retry`,
+    });
+  }
+
   // Health check
   async getHealth(): Promise<any> {
     return this.request<any>({
@@ -1048,24 +1191,4 @@ class ApiClient {
 }
 
 // Export singleton instance
-export const apiClient = new ApiClient(API_BASE_URL);
-
-// Export types for use in components
-export type {
-  User,
-  Company,
-  Lead,
-  Campaign,
-  Workflow,
-  WorkflowExecution,
-  Reply,
-  Booking,
-  AIPersona,
-  EnrichmentRequest,
-  UsageMetric,
-  UsageMetricsOverview,
-  AdminActionLog,
-  GlobalMetricsSummary,
-  PaginatedResponse,
-  ApiError,
-}; 
+export const apiClient = new ApiClient(API_BASE_URL); 

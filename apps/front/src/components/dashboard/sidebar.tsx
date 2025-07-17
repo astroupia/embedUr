@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Target,
   Activity,
+  Bot,
 } from "lucide-react";
 
 const navLinks = [
@@ -33,6 +34,16 @@ const navLinks = [
     label: "Campaigns",
     href: "/dashboard/campaigns",
     icon: Mail,
+  },
+  {
+    label: "Target Audience",
+    href: "/dashboard/target-audience",
+    icon: Target,
+  },
+  {
+    label: "AI Personas",
+    href: "/dashboard/ai-personas",
+    icon: Bot,
   },
   {
     label: "Inbox",

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignInPage, type Testimonial } from '@/components/ui/sign-in';
-import { authApi, type LoginRequest } from '@/lib/api/auth';
+import { AuthAPI, type LoginRequest } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/lib/toast-context';
 
@@ -58,7 +58,7 @@ export default function LoginPage() {
 
       try {
         // Call the login API
-        const response = await authApi.login(loginPayload);
+        const response = await new AuthAPI().login(loginPayload);
         
         // Store auth data using context
         login(response.user, response.accessToken, response.refreshToken);
