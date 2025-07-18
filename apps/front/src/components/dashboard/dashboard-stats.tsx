@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import type { DashboardStats } from "@/lib/types/dashboard";
+import { authErrorHandler } from "@/lib/utils/auth-error-handler";
 
 export function DashboardStats() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -23,10 +24,19 @@ export function DashboardStats() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/dashboard/stats');
+        // Use the authenticated API client instead of direct fetch
+        const response = await fetch('/api/dashboard/stats', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            'Content-Type': 'application/json',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setStats(data);
+        } else if (response.status === 401) {
+          console.error('Unauthorized - token may be expired');
+          authErrorHandler.handleAuthError(new Error('Unauthorized'));
         }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);

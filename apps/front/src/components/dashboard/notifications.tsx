@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Bell, Info, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import type { Notification } from "@/lib/types/dashboard";
+import { authErrorHandler } from "@/lib/utils/auth-error-handler";
 
 export function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -12,10 +13,19 @@ export function Notifications() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch('/api/notifications?unread=true');
+        // Use the authenticated API client instead of direct fetch
+        const response = await fetch('/api/notifications?unread=true', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            'Content-Type': 'application/json',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setNotifications(data);
+        } else if (response.status === 401) {
+          console.error('Unauthorized - token may be expired');
+          authErrorHandler.handleAuthError(new Error('Unauthorized'));
         }
       } catch (error) {
         console.error('Error fetching notifications:', error);

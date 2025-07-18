@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { authErrorHandler, AuthErrorHandler } from '../utils/auth-error-handler';
 
 // Base configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -620,6 +621,12 @@ export interface TargetAudienceTranslatorStats {
 class ApiClient {
   private axiosInstance: AxiosInstance;
   private accessToken: string | null = null;
+  private storedRefreshToken: string | null = null;
+  private isRefreshing = false;
+  private failedQueue: Array<{
+    resolve: (value: any) => void;
+    reject: (error: any) => void;
+  }> = [];
 
   constructor(baseURL: string) {
     this.axiosInstance = axios.create({
@@ -634,20 +641,72 @@ class ApiClient {
       (config) => {
         if (this.accessToken) {
           config.headers.Authorization = `Bearer ${this.accessToken}`;
+          console.log(`[API] Request to ${config.url} with token: ${this.accessToken.substring(0, 10)}...`);
+        } else {
+          console.warn(`[API] Request to ${config.url} without token`);
         }
         return config;
       },
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor for error handling
+    // Response interceptor for error handling and token refresh
     this.axiosInstance.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          // Handle token refresh or logout
-          this.clearAuth();
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          if (this.isRefreshing) {
+            // If already refreshing, queue this request
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            }).then(token => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              return this.axiosInstance(originalRequest);
+            }).catch(err => Promise.reject(err));
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
+          try {
+            // Try to refresh the token
+            if (this.storedRefreshToken) {
+              const response = await this.refreshTokenRequest({ refreshToken: this.storedRefreshToken });
+              const newAccessToken = response.accessToken;
+              
+              this.setAccessToken(newAccessToken);
+              this.setRefreshToken(response.refreshToken);
+              
+              // Update the original request
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+              
+              // Process queued requests
+              this.failedQueue.forEach(({ resolve }) => {
+                resolve(newAccessToken);
+              });
+              this.failedQueue = [];
+              
+              return this.axiosInstance(originalRequest);
+            } else {
+              // No refresh token available, redirect to login
+              authErrorHandler.handleAuthError(error);
+              throw error;
+            }
+          } catch (refreshError) {
+            // Refresh failed, redirect to login and reject all queued requests
+            authErrorHandler.handleAuthError(refreshError);
+            this.failedQueue.forEach(({ reject }) => {
+              reject(refreshError);
+            });
+            this.failedQueue = [];
+            throw refreshError;
+          } finally {
+            this.isRefreshing = false;
+          }
         }
+        
         return Promise.reject(error);
       }
     );
@@ -658,9 +717,25 @@ class ApiClient {
     this.accessToken = token;
   }
 
+  setRefreshToken(token: string) {
+    this.storedRefreshToken = token;
+  }
+
   clearAuth() {
     this.accessToken = null;
+    this.storedRefreshToken = null;
   }
+
+  // Private method for token refresh
+  private async refreshTokenRequest(data: RefreshTokenRequest): Promise<LoginResponse> {
+    return this.request<LoginResponse>({
+      method: 'POST',
+      url: '/auth/refresh',
+      data,
+    });
+  }
+
+
 
   // Generic request method
   private async request<T>(config: AxiosRequestConfig): Promise<T> {
@@ -1188,6 +1263,8 @@ class ApiClient {
       url: '/health',
     });
   }
+
+
 }
 
 // Export singleton instance

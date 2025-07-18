@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
   ConflictException,
+  Inject,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -27,6 +28,7 @@ export class AuthService {
     private tokenRepository: TokenRepository,
     private mailService: MailService,
     private jwtService: JwtService,
+    @Inject('JWT_REFRESH_SERVICE') private refreshJwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto, req: Request) {
@@ -253,10 +255,7 @@ export class AuthService {
       companyId: user.companyId,
     };
 
-    return this.jwtService.sign(payload, {
-      secret: process.env.JWT_ACCESS_SECRET || 'access-secret',
-      expiresIn: '15m',
-    });
+    return this.jwtService.sign(payload);
   }
 
   private generateRefreshToken(user: any): string {
@@ -265,9 +264,6 @@ export class AuthService {
       type: 'refresh',
     };
 
-    return this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
-      expiresIn: '7d',
-    });
+    return this.refreshJwtService.sign(payload);
   }
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Activity, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import type { WorkflowRun } from "@/lib/types/dashboard";
+import { authErrorHandler } from "@/lib/utils/auth-error-handler";
 
 export function RecentActivity() {
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
@@ -12,10 +13,19 @@ export function RecentActivity() {
   useEffect(() => {
     const fetchWorkflowRuns = async () => {
       try {
-        const response = await fetch('/api/workflow_runs/recent');
+        // Use the authenticated API client instead of direct fetch
+        const response = await fetch('/api/workflow_runs/recent', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            'Content-Type': 'application/json',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setWorkflowRuns(data);
+        } else if (response.status === 401) {
+          console.error('Unauthorized - token may be expired');
+          authErrorHandler.handleAuthError(new Error('Unauthorized'));
         }
       } catch (error) {
         console.error('Error fetching workflow runs:', error);

@@ -4,7 +4,14 @@ import { ThemeProvider } from "next-themes";
 import { ToastContainer } from "@/components/ui/toast";
 import { AuthProvider } from "@/lib/auth-context";
 import { ToastProvider } from "@/lib/toast-context";
+import { AuthErrorBoundary } from "@/components/error-boundary/auth-error-boundary";
+import { installGlobalFetchInterceptor } from "@/lib/utils/global-fetch-interceptor";
 import "./globals.css";
+
+// Install global fetch interceptor
+if (typeof window !== 'undefined') {
+  installGlobalFetchInterceptor();
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,8 +46,10 @@ export default function RootLayout({
         >
           <ToastProvider>
             <AuthProvider>
-              {children}
-              <ToastContainer />
+              <AuthErrorBoundary>
+                {children}
+                <ToastContainer />
+              </AuthErrorBoundary>
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>

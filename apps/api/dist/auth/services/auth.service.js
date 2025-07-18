@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -24,12 +27,14 @@ let AuthService = class AuthService {
     tokenRepository;
     mailService;
     jwtService;
-    constructor(userRepository, sessionRepository, tokenRepository, mailService, jwtService) {
+    refreshJwtService;
+    constructor(userRepository, sessionRepository, tokenRepository, mailService, jwtService, refreshJwtService) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.tokenRepository = tokenRepository;
         this.mailService = mailService;
         this.jwtService = jwtService;
+        this.refreshJwtService = refreshJwtService;
     }
     async register(registerDto, req) {
         const { email, password, companyName, firstName, lastName } = registerDto;
@@ -184,29 +189,25 @@ let AuthService = class AuthService {
             role: user.role,
             companyId: user.companyId,
         };
-        return this.jwtService.sign(payload, {
-            secret: process.env.JWT_ACCESS_SECRET || 'access-secret',
-            expiresIn: '15m',
-        });
+        return this.jwtService.sign(payload);
     }
     generateRefreshToken(user) {
         const payload = {
             sub: user.id,
             type: 'refresh',
         };
-        return this.jwtService.sign(payload, {
-            secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
-            expiresIn: '7d',
-        });
+        return this.refreshJwtService.sign(payload);
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
+    __param(5, (0, common_1.Inject)('JWT_REFRESH_SERVICE')),
     __metadata("design:paramtypes", [user_repository_1.UserRepository,
         session_repository_1.SessionRepository,
         token_repository_1.TokenRepository,
         mail_service_1.MailService,
+        jwt_1.JwtService,
         jwt_1.JwtService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -16,7 +16,8 @@ export declare class AuthService {
     private tokenRepository;
     private mailService;
     private jwtService;
-    constructor(userRepository: UserRepository, sessionRepository: SessionRepository, tokenRepository: TokenRepository, mailService: MailService, jwtService: JwtService);
+    private refreshJwtService;
+    constructor(userRepository: UserRepository, sessionRepository: SessionRepository, tokenRepository: TokenRepository, mailService: MailService, jwtService: JwtService, refreshJwtService: JwtService);
     register(registerDto: RegisterDto, req: Request): Promise<{
         message: string;
         user: {

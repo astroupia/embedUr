@@ -7,9 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+
 
 import {
   Dialog,
@@ -71,6 +70,8 @@ import {
 } from "@/lib/api";
 import { InputFormat } from "@/lib/api";
 import { useToast } from "@/lib/toast-context";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 
 // Status badge component
 function StatusBadge({ status }: { status: TargetAudienceTranslator['status'] }) {

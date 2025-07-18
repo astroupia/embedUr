@@ -43,10 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (storedUser && storedAccessToken && storedRefreshToken) {
         try {
-          setUser(JSON.parse(storedUser));
-          setAccessToken(storedAccessToken);
-          setRefreshToken(storedRefreshToken);
-          apiClient.setAccessToken(storedAccessToken); // <-- set token in API client
+                  setUser(JSON.parse(storedUser));
+        setAccessToken(storedAccessToken);
+        setRefreshToken(storedRefreshToken);
+        apiClient.setAccessToken(storedAccessToken); // <-- set token in API client
+        apiClient.setRefreshToken(storedRefreshToken); // <-- set refresh token in API client
           
           // Also set cookies if they don't exist
           const cookies = getAllCookies();
@@ -76,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(accessToken);
     setRefreshToken(refreshToken);
     apiClient.setAccessToken(accessToken); // <-- set token in API client
+    apiClient.setRefreshToken(refreshToken); // <-- set refresh token in API client
     
     // Store in localStorage
     localStorage.setItem('user', JSON.stringify(user));

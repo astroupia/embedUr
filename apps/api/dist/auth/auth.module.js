@@ -35,7 +35,7 @@ exports.AuthModule = AuthModule = __decorate([
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: (configService) => ({
-                    secret: configService.get('JWT_ACCESS_SECRET') || 'access-secret',
+                    secret: configService.get('JWT_SECRET') || 'access-secret',
                     signOptions: { expiresIn: '15m' },
                 }),
                 inject: [config_1.ConfigService],
@@ -52,6 +52,17 @@ exports.AuthModule = AuthModule = __decorate([
             session_repository_1.SessionRepository,
             company_repository_1.CompanyRepository,
             token_repository_1.TokenRepository,
+            {
+                provide: 'JWT_REFRESH_SERVICE',
+                useFactory: (configService) => {
+                    const { JwtService } = require('@nestjs/jwt');
+                    return new JwtService({
+                        secret: configService.get('JWT_SECRET') || 'refresh-secret',
+                        signOptions: { expiresIn: '7d' },
+                    });
+                },
+                inject: [config_1.ConfigService],
+            },
         ],
         exports: [auth_service_1.AuthService, jwt_auth_guard_1.JwtAuthGuard, api_key_guard_1.ApiKeyGuard, user_repository_1.UserRepository],
     })

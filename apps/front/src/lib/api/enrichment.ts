@@ -40,6 +40,7 @@ export class EnrichmentAPI {
   }
 }
 
+
 // Export types for convenience
 export type {
   EnrichmentRequest,
